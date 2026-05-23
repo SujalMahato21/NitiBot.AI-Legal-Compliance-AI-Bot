@@ -1,0 +1,3 @@
+[submodule "nitibot-api"]
+	path = nitibot-api
+	url = https://github.com/SujalMahato21/nitibot-api

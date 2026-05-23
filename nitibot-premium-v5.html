@@ -1,0 +1,4070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NitiBot Premium — AI Legal Compliance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- jsPDF for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       PREMIUM DESIGN TOKENS  (extends existing nitibot-ui.html palette)
+    ═══════════════════════════════════════════════════════════════ */
+    :root {
+      --bg-void:        #080b10;
+      --bg-surface:     #0d1018;
+      --bg-panel:       #111318;
+      --bg-card:        #141a26;
+      --bg-hover:       #1a2030;
+      --border:         rgba(201,168,85,0.14);
+      --border-hover:   rgba(201,168,85,0.3);
+
+      --gold:           #c9a855;
+      --gold-bright:    #f5d87a;
+      --gold-dim:       #96782d;
+      --gold-glow:      rgba(201,168,85,0.22);
+      --gold-subtle:    rgba(201,168,85,0.07);
+
+      --text-primary:   #f0e6cc;
+      --text-secondary: #8a8070;
+      --text-muted:     #4a4535;
+
+      --green:          #22c55e;
+      --red:            #ef4444;
+      --blue:           #3b82f6;
+      --purple:         #a855f7;
+
+      --sidebar-w:      252px;
+      --header-h:       62px;
+      --radius:         10px;
+      --radius-lg:      14px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'Outfit', 'Segoe UI', sans-serif;
+      background: var(--bg-void);
+      color: var(--text-primary);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Animated grid background (same as base UI) */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,85,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,85,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      animation: gridDrift 20s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes gridDrift {
+      0%   { background-position: 0 0; }
+      100% { background-position: 48px 48px; }
+    }
+
+    /* ── Radial ambient glow ── */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -20%; left: 50%;
+      transform: translateX(-50%);
+      width: 900px; height: 500px;
+      background: radial-gradient(ellipse, rgba(201,168,85,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      animation: ambientPulse 6s ease-in-out infinite;
+    }
+    @keyframes ambientPulse {
+      0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+      50%       { opacity: 1; transform: translateX(-50%) scale(1.08); }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════════════════════════════ */
+    .header {
+      position: relative;
+      z-index: 50;
+      height: var(--header-h);
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    /* Animated shimmer line at very top */
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg,
+        transparent 0%, var(--gold-dim) 20%,
+        var(--gold) 40%, var(--gold-bright) 50%,
+        var(--gold) 60%, var(--gold-dim) 80%, transparent 100%);
+      background-size: 300% 100%;
+      animation: headerShimmer 4s linear infinite;
+    }
+    @keyframes headerShimmer {
+      0%   { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+
+    .logo-wrap { display: flex; align-items: center; gap: 10px; }
+
+    .logo-shield {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 14px var(--gold-glow);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-size: 19px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── PREMIUM CROWN BADGE ── */
+    .premium-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: linear-gradient(135deg, #7a5c00, var(--gold));
+      color: #0a0c10;
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      padding: 3px 10px 3px 8px;
+      border-radius: 20px;
+      box-shadow: 0 0 12px var(--gold-glow);
+      animation: badgePulse 3s ease-in-out infinite;
+    }
+    @keyframes badgePulse {
+      0%, 100% { box-shadow: 0 0 8px var(--gold-glow); }
+      50%       { box-shadow: 0 0 20px rgba(201,168,85,0.45); }
+    }
+
+    .header-spacer { flex: 1; }
+
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    .free-button {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.16);
+      color: var(--gold);
+      padding: 7px 12px;
+      border-radius: 9px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .free-button:hover {
+      background: rgba(201,168,85,0.12);
+      border-color: var(--gold);
+    }
+
+    /* Live status pill */
+    .status-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      letter-spacing: 0.05em;
+    }
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: blink 1.8s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.35; }
+    }
+
+    /* User avatar */
+    .user-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      color: #0a0c10;
+      border: 2px solid var(--gold);
+      box-shadow: 0 0 10px var(--gold-glow);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       MAIN LAYOUT
+    ═══════════════════════════════════════════════════════════════ */
+    .main {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       PREMIUM SIDEBAR
+    ═══════════════════════════════════════════════════════════════ */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .sidebar::-webkit-scrollbar { width: 3px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .sb-section { padding: 14px 12px 6px; }
+
+    .sb-label {
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0 8px;
+      margin-bottom: 5px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+    .history-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+    .history-icon {
+      width: 14px;
+      height: 14px;
+      stroke-width: 2;
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+    .history-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 10px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+      border: 1px solid transparent;
+      user-select: none;
+    }
+    .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .nav-item.active {
+      background: rgba(201,168,85,0.1);
+      color: var(--gold);
+      border-color: rgba(201,168,85,0.18);
+    }
+    .nav-icon { width: 18px; height: 18px; stroke-width: 2; flex-shrink: 0; }
+
+    /* Premium-only tag on nav items */
+    .prem-tag {
+      margin-left: auto;
+      font-size: 8.5px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      background: linear-gradient(135deg, #7a5c00, var(--gold));
+      color: #0a0c10;
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
+
+    .sb-divider { height: 1px; background: var(--border); margin: 8px 12px; }
+
+    /* ── PLAN CARD ── */
+    .plan-card {
+      margin: 10px 12px 14px;
+      background: linear-gradient(135deg,
+        rgba(201,168,85,0.13) 0%,
+        rgba(201,168,85,0.04) 100%);
+      border: 1px solid rgba(201,168,85,0.28);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+    }
+    .plan-card-head {
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 3px;
+    }
+    .plan-card-title {
+      font-size: 11px; font-weight: 700;
+      color: var(--gold); letter-spacing: 0.8px; text-transform: uppercase;
+    }
+    .plan-card-sub { font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; }
+    .plan-bar-wrap { height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 5px; }
+    .plan-bar-fill {
+      height: 100%; width: 34%;
+      background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+      border-radius: 4px;
+    }
+    .plan-bar-text { font-size: 10px; color: var(--text-muted); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CONTENT AREA
+    ═══════════════════════════════════════════════════════════════ */
+    .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── TAB BAR ── */
+    .tab-bar {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      padding: 10px 18px 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+      flex-shrink: 0;
+    }
+    .tab {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 15px;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: var(--radius) var(--radius) 0 0;
+      border: 1px solid transparent;
+      border-bottom: none;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .tab:hover { color: var(--text-primary); background: var(--bg-hover); }
+    .tab.active {
+      color: var(--gold);
+      background: var(--bg-void);
+      border-color: var(--border);
+      border-bottom-color: var(--bg-void);
+    }
+    .tab-icon { width: 15px; height: 15px; stroke-width: 2; margin-bottom: -1px; }
+
+    /* ── TAB PANELS ── */
+    .tab-panels { flex: 1; overflow: hidden; position: relative; }
+    .tab-panel {
+      position: absolute; inset: 0;
+      overflow-y: auto;
+      display: none;
+      padding: 20px;
+    }
+    .tab-panel.active { display: block; overflow-y: auto; }
+    /* Chat panel is the only one that needs flex — it manages its own inner scroll */
+    #panel-chat.active { display: flex; flex-direction: column; overflow: hidden; }
+    .tab-panel::-webkit-scrollbar { width: 4px; }
+    .tab-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    /* ── SCROLL FIXES ── */
+    /* Alerts panel */
+    #panel-alerts .settings-block { flex-shrink: 0; }
+    /* Calendar grid */
+    #calGrid { overflow: visible; }
+    /* Support panel ticket form */
+    #panel-support form { flex-shrink: 0; }
+    /* Ensure all scrollable panels have breathing room at the bottom */
+    .tab-panel:not(#panel-chat) { padding-bottom: 40px; }
+    /* Settings grid inside scrollable panel */
+    .settings-grid { padding-bottom: 20px; }
+    /* Prevent any inner flex container from blocking scroll */
+    .tab-panel > * { flex-shrink: 0; }
+    #panel-chat > .chat-messages { flex-shrink: 1; flex: 1; min-height: 0; }
+    /* Mobile scroll */
+    @media(max-width:768px) {
+      .tab-panel { -webkit-overflow-scrolling: touch; }
+      #panel-chat { overflow: hidden; }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ① CHAT PANEL
+    ═══════════════════════════════════════════════════════════════ */
+    #panel-chat { padding: 0; }
+
+    /* Premium welcome banner */
+    .welcome-banner {
+      margin: 14px 18px 0;
+      padding: 14px 18px;
+      background: linear-gradient(135deg,
+        rgba(201,168,85,0.11) 0%,
+        rgba(168,85,247,0.07) 100%);
+      border: 1px solid rgba(201,168,85,0.22);
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; gap: 12px;
+      flex-shrink: 0;
+    }
+    .wb-icon { font-size: 26px; }
+    .wb-text h3 { font-size: 13.5px; font-weight: 700; color: var(--gold); margin-bottom: 2px; }
+    .wb-text p  { font-size: 11.5px; color: var(--text-secondary); }
+
+    /* Quick-action chips */
+    .quick-chips {
+      display: flex; gap: 7px;
+      padding: 10px 18px;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+    .quick-chips::-webkit-scrollbar { display: none; }
+    .qchip {
+      display: flex; align-items: center; gap: 5px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 13px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .qchip:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-subtle); }
+
+    /* Context filter chips (same as base UI) */
+    .context-strip {
+      display: flex; gap: 6px;
+      padding: 0 18px 10px;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+    .context-strip::-webkit-scrollbar { display: none; }
+    .chip {
+      display: flex; align-items: center; gap: 5px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .chip:hover { border-color: var(--border-hover); color: var(--gold); background: var(--gold-subtle); }
+    .chip.active { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-subtle); }
+    .chip-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); }
+
+    /* Messages */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 18px 14px;
+      min-height: 0;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      padding: 40px 0;
+      animation: fadeIn 0.9s var(--ease-out-quint) 0.3s both;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    
+    .empty-icon {
+      position: relative;
+      width: 90px; height: 90px;
+    }
+    
+    .empty-icon svg { width: 90px; height: 90px; }
+    
+    .empty-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(201,168,85,0.15);
+      animation: emptyRing 3s ease-in-out infinite;
+    }
+    .er1 { inset: -12px; animation-delay: 0s; }
+    .er2 { inset: -22px; animation-delay: 1s; opacity: 0.5; }
+    .er3 { inset: -34px; animation-delay: 2s; opacity: 0.2; }
+    
+    @keyframes emptyRing {
+      0%, 100% { transform: scale(1); opacity: 0.3; }
+      50%       { transform: scale(1.04); opacity: 1; }
+    }
+    
+    .empty-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+      letter-spacing: -0.3px;
+    }
+    
+    .empty-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-align: center;
+      max-width: 340px;
+      line-height: 1.7;
+      font-weight: 300;
+    }
+    
+    /* ── Starter questions ── */
+    .starters {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      max-width: 560px;
+    }
+    
+    .starter-card {
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      cursor: pointer;
+      transition: border-color 0.25s, background 0.25s, transform 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .starter-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--gold-subtle), transparent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    
+    .starter-card:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-elevated);
+      transform: translateY(-2px);
+    }
+    
+    .starter-card:hover::before { opacity: 1; }
+    
+    .starter-label {
+      font-size: 11px;
+      font-family: 'Space Mono', monospace;
+      color: var(--gold-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    
+    .starter-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    .msg-row { display: flex; gap: 9px; margin-bottom: 14px; align-items: flex-start; }
+    .msg-row.user { flex-direction: row-reverse; }
+
+    .msg-av {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .msg-av.bot  { background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #0a0c10; }
+    .msg-av.user { background: linear-gradient(135deg, #1d4ed8, #3b82f6); color: #fff; }
+
+    .msg-body { display: flex; flex-direction: column; gap: 4px; max-width: 74%; }
+    .msg-row.user .msg-body { align-items: flex-end; }
+
+    .msg-bubble {
+      padding: 10px 14px;
+      border-radius: var(--radius-lg);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+    /* Premium bot bubble: gold left accent */
+    .msg-row.bot .msg-bubble {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--gold);
+      border-top-left-radius: 4px;
+    }
+    .msg-row.user .msg-bubble {
+      background: linear-gradient(135deg, rgba(29,78,216,0.2), rgba(99,102,241,0.2));
+      border: 1px solid rgba(59,130,246,0.25);
+      border-top-right-radius: 4px;
+    }
+    .msg-meta { font-size: 10px; color: var(--text-muted); }
+
+    /* Source citation chips */
+    .src-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    .src-chip {
+      font-size: 10px;
+      background: rgba(201,168,85,0.09);
+      border: 1px solid rgba(201,168,85,0.22);
+      color: var(--gold);
+      padding: 2px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* Export / copy action row */
+    .msg-actions {
+      display: flex; gap: 6px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .msg-row:hover .msg-actions { opacity: 1; }
+    .msg-act-btn {
+      font-size: 10px;
+      color: var(--text-muted);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .msg-act-btn:hover { color: var(--gold); border-color: var(--gold); }
+
+    /* Chat input */
+    .chat-input-area {
+      padding: 10px 18px 16px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+    }
+    .input-shell {
+      display: flex; align-items: flex-end; gap: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 10px 12px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-shell:focus-within {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px var(--gold-glow);
+    }
+    .chat-textarea {
+      flex: 1;
+      background: transparent;
+      border: none; outline: none;
+      color: var(--text-primary);
+      font-size: 13px;
+      resize: none;
+      max-height: 110px;
+      line-height: 1.5;
+      font-family: inherit;
+      caret-color: var(--gold);
+    }
+    .chat-textarea::placeholder { color: var(--text-muted); }
+    .input-btns { display: flex; gap: 5px; align-items: center; }
+    .ibtn {
+      width: 30px; height: 30px;
+      border-radius: 7px; border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      transition: all 0.15s;
+    }
+    .ibtn:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .send-btn {
+      width: 34px; height: 34px;
+      border-radius: 9px; border: none;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      color: #0a0c10;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 0 10px var(--gold-glow);
+      transition: all 0.15s;
+    }
+    .send-btn:hover { transform: scale(1.06); box-shadow: 0 0 18px rgba(201,168,85,0.4); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ② DASHBOARD PANEL
+    ═══════════════════════════════════════════════════════════════ */
+    .panel-hd { margin-bottom: 18px; }
+    .panel-hd h2 { font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+    .panel-hd p  { font-size: 12.5px; color: var(--text-secondary); }
+
+    /* Stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 15px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .stat-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+    .stat-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+    }
+    .stat-card.c-gold::before   { background: linear-gradient(90deg, var(--gold-dim), var(--gold)); }
+    .stat-card.c-blue::before   { background: linear-gradient(90deg, #1d4ed8, #3b82f6); }
+    .stat-card.c-green::before  { background: linear-gradient(90deg, #15803d, #22c55e); }
+    .stat-card.c-purple::before { background: linear-gradient(90deg, #7e22ce, #a855f7); }
+    .stat-icon  { font-size: 20px; margin-bottom: 7px; }
+    .stat-val   { font-size: 24px; font-weight: 800; }
+    .stat-lbl   { font-size: 11.5px; color: var(--text-secondary); margin-top: 2px; }
+    .stat-delta { font-size: 10.5px; margin-top: 5px; display: flex; align-items: center; gap: 3px; }
+    .stat-delta.up   { color: var(--green); }
+    .stat-delta.down { color: var(--red); }
+
+    /* Compliance + Deadlines row */
+    .dash-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .dash-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+    }
+    .dash-card h4 {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.9px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    /* Compliance ring */
+    .ring-wrap { display: flex; align-items: center; gap: 14px; }
+    .ring {
+      width: 76px; height: 76px;
+      border-radius: 50%;
+      background: conic-gradient(var(--gold) 0% 78%, rgba(201,168,85,0.12) 78% 100%);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; flex-shrink: 0;
+    }
+    .ring::after {
+      content: ''; position: absolute;
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--bg-card);
+    }
+    .ring-val {
+      position: relative; z-index: 1;
+      font-size: 17px; font-weight: 800;
+      color: var(--gold);
+    }
+    .ring-items { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+    .ring-item {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+    }
+    .ring-item-lbl { color: var(--text-secondary); }
+    .ring-item-val { font-weight: 600; }
+    .ok   { color: var(--green); }
+    .warn { color: var(--gold); }
+    .bad  { color: var(--red); }
+
+    /* Deadlines */
+    .deadline-list { display: flex; flex-direction: column; gap: 7px; }
+    .dl-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 9px 11px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 12px;
+    }
+    .dl-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dl-dot.urgent { background: var(--red);   box-shadow: 0 0 5px var(--red); }
+    .dl-dot.soon   { background: var(--gold);  box-shadow: 0 0 5px var(--gold-glow); }
+    .dl-dot.ok     { background: var(--green); }
+    .dl-name { flex: 1; color: var(--text-primary); }
+    .dl-date { font-size: 10.5px; color: var(--text-muted); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ③ DOCUMENTS PANEL
+    ═══════════════════════════════════════════════════════════════ */
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 20px;
+    }
+    .upload-zone:hover { border-color: var(--gold); background: var(--gold-subtle); }
+    .uz-icon { font-size: 32px; margin-bottom: 8px; }
+    .uz-title { font-size: 13.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+    .uz-sub   { font-size: 11.5px; color: var(--text-secondary); }
+
+    /* Document template grid */
+    .doc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .doc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .doc-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    .doc-icon  { font-size: 26px; margin-bottom: 9px; }
+    .doc-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+    .doc-desc  { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+    .doc-prem  {
+      position: absolute; top: 9px; right: 9px;
+      font-size: 8.5px; font-weight: 800;
+      background: linear-gradient(135deg, #7a5c00, var(--gold));
+      color: #0a0c10; padding: 2px 7px; border-radius: 8px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ④ ANALYTICS PANEL
+    ═══════════════════════════════════════════════════════════════ */
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .chart-card h4 {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.9px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    /* Bar chart */
+    .bar-chart { display: flex; align-items: flex-end; gap: 7px; height: 90px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .bar {
+      width: 100%;
+      border-radius: 4px 4px 0 0;
+      background: linear-gradient(180deg, var(--gold), var(--gold-dim));
+      min-height: 4px;
+    }
+    .bar-lbl { font-size: 9.5px; color: var(--text-muted); }
+
+    /* Topic breakdown */
+    .topic-list { display: flex; flex-direction: column; gap: 9px; }
+    .topic-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+    .topic-name { flex: 1; color: var(--text-secondary); }
+    .topic-bar-bg { width: 110px; height: 5px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .topic-bar-fg { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); }
+    .topic-pct { font-size: 10.5px; color: var(--text-muted); width: 28px; text-align: right; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ⑤ SETTINGS PANEL
+    ═══════════════════════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════════════════════
+       SETTINGS — OPTIMIZED
+    ═══════════════════════════════════════════════════════════════ */
+    .settings-search-wrap { position: relative; margin-bottom: 18px; }
+    .settings-search {
+      width: 100%; padding: 10px 14px 10px 38px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text-primary); font-size: 13px;
+      outline: none; transition: border-color 0.2s; box-sizing: border-box;
+    }
+    .settings-search:focus { border-color: var(--gold); }
+    .settings-search::placeholder { color: var(--text-muted); }
+    .settings-search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      font-size: 15px; pointer-events: none;
+    }
+    .settings-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    }
+    .settings-grid .settings-block.full-width { grid-column: 1 / -1; }
+    @media(max-width:780px){ .settings-grid { grid-template-columns: 1fr; } }
+    .settings-block {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden; transition: border-color 0.2s;
+    }
+    .settings-block:hover { border-color: rgba(201,168,85,0.25); }
+    .settings-block-title {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; font-size: 10.5px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.9px; color: var(--text-muted);
+      border-bottom: 1px solid var(--border); cursor: pointer; user-select: none;
+      transition: background 0.15s;
+    }
+    .settings-block-title:hover { background: rgba(255,255,255,0.03); }
+    .settings-block-title .s-chevron { font-size: 10px; transition: transform 0.2s; color: var(--text-muted); }
+    .settings-block.collapsed .s-chevron { transform: rotate(-90deg); }
+    .settings-block.collapsed .settings-block-body { display: none; }
+    .setting-row {
+      display: flex; align-items: center; padding: 13px 16px;
+      border-bottom: 1px solid var(--border); gap: 12px; transition: background 0.15s;
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-row:hover { background: rgba(255,255,255,0.02); }
+    .s-icon { font-size: 17px; width: 24px; text-align: center; flex-shrink: 0; }
+    .s-info { flex: 1; min-width: 0; }
+    .s-info h5 { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .s-info p  { font-size: 11px; color: var(--text-secondary); margin-top: 2px; line-height: 1.4; }
+    .s-badge {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      padding: 2px 7px; border-radius: 20px; letter-spacing: 0.5px;
+      margin-left: 6px; vertical-align: middle;
+    }
+    .s-badge-premium { background: rgba(201,168,85,0.15); color: var(--gold); }
+    .s-badge-new     { background: rgba(34,197,94,0.15);  color: var(--green); }
+    .toggle {
+      width: 40px; height: 22px; background: var(--border); border-radius: 20px;
+      position: relative; cursor: pointer; transition: background 0.25s; flex-shrink: 0;
+    }
+    .toggle.on { background: rgba(201,168,85,0.4); }
+    .toggle::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--text-muted); transition: all 0.25s; box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .toggle.on::after { left: 21px; background: var(--gold); }
+    .s-select {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text-primary); font-size: 12px;
+      padding: 6px 10px; outline: none; cursor: pointer; transition: border-color 0.2s; min-width: 110px;
+    }
+    .s-select:focus { border-color: var(--gold); }
+    .s-select option { background: var(--bg-surface); }
+    .s-input {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text-primary); font-size: 12px;
+      padding: 6px 10px; outline: none; transition: border-color 0.2s; width: 180px;
+    }
+    .s-input:focus { border-color: var(--gold); }
+    .sub-card {
+      margin: 14px 16px; padding: 14px 16px;
+      background: linear-gradient(135deg, rgba(201,168,85,0.12), rgba(201,168,85,0.04));
+      border: 1px solid rgba(201,168,85,0.3); border-radius: 12px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .sub-card-icon { font-size: 28px; }
+    .sub-card-info { flex: 1; }
+    .sub-card-info h4 { font-size: 14px; font-weight: 700; color: var(--gold); }
+    .sub-card-info p  { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+    .sub-card-info .sub-renews { font-size: 10px; color: var(--text-muted); margin-top: 5px; }
+    .sub-manage-btn {
+      background: linear-gradient(135deg, #c9a855, #a07830);
+      color: #080b10; font-size: 11px; font-weight: 700;
+      border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; white-space: nowrap;
+    }
+    .flowise-cfg { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .cfg-row { display: flex; flex-direction: column; gap: 4px; }
+    .cfg-label { font-size: 11px; color: var(--text-secondary); font-weight: 600; }
+    .cfg-input {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text-primary); font-size: 12px;
+      padding: 8px 12px; outline: none; transition: border-color 0.2s;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .cfg-input:focus { border-color: var(--gold); }
+    .cfg-actions { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+    .cfg-status { font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+    .cfg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+    .cfg-dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .cfg-dot.error     { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+    .audit-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 16px; border-bottom: 1px solid var(--border); font-size: 12px;
+    }
+    .audit-row:last-child { border-bottom: none; }
+    .audit-time   { color: var(--text-muted); font-size: 10.5px; width: 80px; flex-shrink: 0; }
+    .audit-action { flex: 1; color: var(--text-secondary); }
+    .audit-badge  { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 20px; letter-spacing: 0.5px; flex-shrink: 0; }
+    .danger-zone  { padding: 14px 16px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .danger-btn   { flex: 1; min-width: 140px; padding: 9px 14px; border-radius: 9px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center; border: none; }
+    .danger-btn-export { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: #3b82f6; }
+    .danger-btn-export:hover { background: rgba(59,130,246,0.2); }
+    .danger-btn-delete { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.25); color: #ef4444; }
+    .danger-btn-delete:hover { background: rgba(239,68,68,0.15); }
+
+    /* ═══════════════════════════════════════════════════════════════
+       SHARED UTILITIES
+    ═══════════════════════════════════════════════════════════════ */
+    .section-title {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.9px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-size: 12.5px;
+      color: var(--text-primary);
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CALENDAR STYLES
+    ═══════════════════════════════════════════════════════════════ */
+    .cal-day-header {
+      padding: 8px 4px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-surface);
+    }
+    .cal-day {
+      min-height: 70px;
+      padding: 6px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .cal-day:hover { background: var(--bg-hover); }
+    .cal-day.today {
+      background: rgba(201,168,85,0.08);
+      border: 1px solid rgba(201,168,85,0.3);
+    }
+    .cal-day.other-month { opacity: 0.3; }
+    .cal-day-num {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 3px;
+    }
+    .cal-day.today .cal-day-num { color: var(--gold); font-weight: 800; }
+    .cal-event {
+      font-size: 9.5px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cal-event.urgent { background: rgba(239,68,68,0.2); color: #ef4444; }
+    .cal-event.soon   { background: rgba(201,168,85,0.2); color: var(--gold); }
+    .cal-event.ok     { background: rgba(34,197,94,0.15); color: var(--green); }
+    /* ═══════════════════════════════════════════════════════════════
+       MOBILE RESPONSIVE
+    ═══════════════════════════════════════════════════════════════ */
+    .hamburger {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 9px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 16px;
+      margin-right: 4px;
+    }
+    @media (max-width: 768px) {
+      :root { --sidebar-w: 240px; }
+      .hamburger { display: block; }
+      .sidebar {
+        position: fixed;
+        left: -260px;
+        top: var(--header-h);
+        height: calc(100% - var(--header-h));
+        z-index: 100;
+        transition: left 0.25s ease;
+        box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+      }
+      .sidebar.open { left: 0; }
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 99;
+      }
+      .sidebar-overlay.show { display: block; }
+      body.sidebar-open { overflow: hidden; }
+      .tab-bar { overflow-x: auto; }
+      .tab-bar::-webkit-scrollbar { display: none; }
+      .welcome-banner { margin: 10px 12px 0; padding: 12px; }
+      .quick-chips { padding: 8px 12px; }
+      .context-strip { padding: 0 12px 8px; }
+      .chat-messages { padding: 0 12px 10px; }
+      .chat-input-area { padding: 8px 12px 14px; }
+      .dash-row { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    /* ═══════════════════════════════════════════════════════════════
+       ANIMATED STAT COUNTERS
+    ═══════════════════════════════════════════════════════════════ */
+    .stat-val { transition: none; }
+    /* ═══════════════════════════════════════════════════════════════
+       AUDIT LOG & SKELETON
+    ═══════════════════════════════════════════════════════════════ */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-hover) 50%, var(--bg-card) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .audit-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .audit-row:last-child { border-bottom: none; }
+    .audit-time { color: var(--text-muted); font-size: 10.5px; width: 90px; flex-shrink: 0; }
+    .audit-action { flex: 1; color: var(--text-secondary); }
+    .audit-badge { font-size: 9.5px; padding: 2px 7px; border-radius: 6px; font-weight: 700; }
+
+  </style>
+</head>
+<body>
+
+<!-- ══ TOAST ══ -->
+<div class="toast" id="toast"></div>
+
+<!-- ══ HEADER ══ -->
+<div class="header">
+  <button class="hamburger" onclick="toggleSidebar()" title="Toggle menu">☰</button>
+  <div class="logo-wrap">
+    <div class="logo-shield"><i data-lucide="scale" style="width:22px;height:22px;color:#0a0c10;"></i></div>
+    <span class="logo-text">NitiBot</span>
+  </div>
+
+  <!-- ★ PREMIUM BADGE — key visual differentiator -->
+  <div class="premium-badge">
+    <span>👑</span> Premium
+  </div>
+
+  <div class="header-spacer"></div>
+
+  <div class="header-right">
+    <button class="free-button" onclick="window.location.href='nitibot-ui.html'" title="Switch to free version">Free</button>
+    <div class="status-pill" id="statusPill">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">CONNECTING…</span>
+    </div>
+    <!-- Notification Bell -->
+    <button id="notifBtn" onclick="switchTab('alerts',document.querySelector('.nav-item:nth-of-type(6)'))" title="Smart Alerts"
+      style="position:relative;background:transparent;border:1px solid rgba(201,168,85,0.25);border-radius:6px;padding:6px 9px;cursor:pointer;color:#c9a855;font-size:14px;">
+      🔔
+      <span id="notifBadge" style="position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;">3</span>
+    </button>
+    <button class="header-menu-btn" onclick="openConfig()" title="Configure Flowise connection"
+      style="background:transparent;border:1px solid rgba(201,168,85,0.25);border-radius:6px;padding:6px 8px;cursor:pointer;color:#c9a855;font-size:13px;">⚙</button>
+    <div class="user-avatar" id="userAvatar" title="Acme Corp — Premium">AC</div>
+  </div>
+</div>
+
+<!-- ══ SIDEBAR OVERLAY (mobile) ══ -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- ══ SIDEBAR ══ -->
+  <div class="sidebar">
+
+    <div class="sb-section">
+      <div class="sb-label">Chat</div>
+      <div class="nav-item active" id="nav-new-chat" onclick="clearChat(); switchTab('chat', this)">
+        <i data-lucide="plus-circle" class="nav-icon"></i> New Chat
+      </div>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-section" id="sb-history">
+      <div class="sb-label">Chat History</div>
+      <div id="historyList"></div>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-section">
+      <div class="sb-label">Workspace</div>
+      <div class="nav-item" onclick="switchTab('dashboard', this)">
+        <i data-lucide="layout-dashboard" class="nav-icon"></i> Compliance Dashboard
+        <span class="prem-tag">PRO</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('documents', this)">
+        <i data-lucide="folder-open" class="nav-icon"></i> Document Studio
+        <span class="prem-tag">PRO</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('analytics', this)">
+        <i data-lucide="trending-up" class="nav-icon"></i> Analytics
+        <span class="prem-tag">PRO</span>
+      </div>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-section">
+      <div class="sb-label">Tools</div>
+      <div class="nav-item" onclick="switchTab('calendar', this)">
+        <i data-lucide="calendar" class="nav-icon"></i> Compliance Calendar
+        <span class="prem-tag">PRO</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('alerts', this)">
+        <i data-lucide="bell" class="nav-icon"></i> Smart Alerts
+        <span class="prem-tag">PRO</span>
+      </div>
+      <div class="nav-item" onclick="switchTab('support', this)">
+        <i data-lucide="headphones" class="nav-icon"></i> Priority Support
+        <span class="prem-tag">PRO</span>
+      </div>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-section">
+      <div class="sb-label">Account</div>
+      <div class="nav-item" onclick="switchTab('settings', this)">
+        <i data-lucide="settings" class="nav-icon"></i> Settings
+      </div>
+    </div>
+
+    <!-- Plan usage card -->
+    <div class="plan-card">
+      <div class="plan-card-head">
+        <span>👑</span>
+        <span class="plan-card-title">Premium Plan</span>
+      </div>
+      <div class="plan-card-sub">Acme Corp · Renews Jun 2026</div>
+      <div class="plan-bar-wrap">
+        <div class="plan-bar-fill"></div>
+      </div>
+      <div class="plan-bar-text">34 / 100 queries used this month</div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+  <!-- ══ CONTENT ══ -->
+  <div class="content">
+
+    <!-- TAB BAR -->
+    <div class="tab-bar">
+      <div class="tab active" id="tab-chat" onclick="switchTab('chat', this)">
+        <i data-lucide="message-square" class="tab-icon"></i> Chat
+      </div>
+      <div class="tab" id="tab-dashboard" onclick="switchTab('dashboard', this)">
+        <i data-lucide="layout-dashboard" class="tab-icon"></i> Dashboard
+      </div>
+      <div class="tab" id="tab-documents" onclick="switchTab('documents', this)">
+        <i data-lucide="folder-open" class="tab-icon"></i> Documents
+      </div>
+      <div class="tab" id="tab-analytics" onclick="switchTab('analytics', this)">
+        <i data-lucide="trending-up" class="tab-icon"></i> Analytics
+      </div>
+      <div class="tab" id="tab-settings" onclick="switchTab('settings', this)">
+        <i data-lucide="settings" class="tab-icon"></i> Settings
+      </div>
+      <div class="tab" id="tab-calendar" onclick="switchTab('calendar', this)">
+        <i data-lucide="calendar" class="tab-icon"></i> Calendar
+      </div>
+      <div class="tab" id="tab-alerts" onclick="switchTab('alerts', this)">
+        <i data-lucide="bell" class="tab-icon"></i> Alerts
+      </div>
+      <div class="tab" id="tab-support" onclick="switchTab('support', this)">
+        <i data-lucide="headphones" class="tab-icon"></i> Support
+      </div>
+    </div>
+
+    <!-- TAB PANELS -->
+    <div class="tab-panels">
+
+      <!-- ① CHAT PANEL -->
+      <div class="tab-panel active" id="panel-chat">
+
+
+        <!-- Messages -->
+
+        <div class="chat-messages" id="chatMessages">
+
+          <!-- Empty State -->
+          <div class="empty-state" id="emptyState">
+            <div class="empty-icon">
+              <div class="empty-ring er1"></div>
+              <div class="empty-ring er2"></div>
+              <div class="empty-ring er3"></div>
+              <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M36 4 L62 16 L62 40 C62 56 36 68 36 68 C36 68 10 56 10 40 L10 16 Z" fill="#080b10" stroke="#c9a855" stroke-width="1.4"/>
+                <path d="M36 11 L56 21 L56 39 C56 52 36 62 36 62 C36 62 16 52 16 39 L16 21 Z" fill="none" stroke="#c9a855" stroke-width="0.6" opacity="0.35"/>
+                <line x1="22" y1="34" x2="50" y2="34" stroke="#c9a855" stroke-width="1.2" stroke-linecap="round"/>
+                <line x1="36" y1="22" x2="36" y2="54" stroke="#c9a855" stroke-width="1.2" stroke-linecap="round"/>
+                <circle cx="36" cy="23" r="2.5" fill="#c9a855"/>
+                <line x1="24" y1="34" x2="22" y2="42" stroke="#c9a855" stroke-width="0.9" stroke-dasharray="2 1.5"/>
+                <path d="M17 42 Q22 47 27 42" stroke="#c9a855" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+                <line x1="48" y1="34" x2="50" y2="42" stroke="#c9a855" stroke-width="0.9" stroke-dasharray="2 1.5"/>
+                <path d="M45 42 Q50 47 55 42" stroke="#c9a855" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+                <rect x="30" y="52" width="12" height="2" rx="1" fill="#c9a855" opacity="0.6"/>
+                <circle cx="22" cy="26" r="2" fill="#4a7fb5" opacity="0.9"/>
+                <circle cx="50" cy="26" r="2" fill="#4a7fb5" opacity="0.9"/>
+                <line x1="24" y1="26" x2="34" y2="26" stroke="#4a7fb5" stroke-width="0.8" opacity="0.6"/>
+                <line x1="38" y1="26" x2="48" y2="26" stroke="#4a7fb5" stroke-width="0.8" opacity="0.6"/>
+                <circle cx="36" cy="26" r="1.4" fill="#4a7fb5" opacity="0.8"/>
+              </svg>
+            </div>
+            <div>
+              <div class="empty-title">Ask NitiBot anything about<br>Indian legal compliance</div>
+              <div class="empty-sub" style="margin-top:10px">Powered by GST Act · Companies Act · IT Act · SEBI · RBI</div>
+            </div>
+            <div class="starters">
+              <div class="starter-card" onclick="fillChat(this.querySelector('.starter-text').textContent)">
+                <div class="starter-label"><i data-lucide="clipboard-list" style="width:14px;height:14px;margin-right:4px;"></i> GST</div>
+                <div class="starter-text">What is the GST registration threshold for businesses?</div>
+              </div>
+              <div class="starter-card" onclick="fillChat(this.querySelector('.starter-text').textContent)">
+                <div class="starter-label"><i data-lucide="building-2" style="width:14px;height:14px;margin-right:4px;"></i> Companies Act</div>
+                <div class="starter-text">What are director responsibilities under Companies Act 2013?</div>
+              </div>
+              <div class="starter-card" onclick="fillChat(this.querySelector('.starter-text').textContent)">
+                <div class="starter-label"><i data-lucide="laptop" style="width:14px;height:14px;margin-right:4px;"></i> IT Act</div>
+                <div class="starter-text">What are data protection obligations for businesses under IT Act?</div>
+              </div>
+              <div class="starter-card" onclick="fillChat(this.querySelector('.starter-text').textContent)">
+                <div class="starter-label"><i data-lucide="bar-chart-3" style="width:14px;height:14px;margin-right:4px;"></i> SEBI</div>
+                <div class="starter-text">What are insider trading regulations under SEBI?</div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /chat-messages -->
+
+        <!-- Input -->
+        <div class="chat-input-area">
+          <div class="input-shell">
+            <textarea class="chat-textarea" id="chatInput" rows="1"
+              placeholder="Ask about GST, Companies Act, SEBI, RBI, MSME…"
+              onkeydown="handleKey(event)"></textarea>
+            <div class="input-btns">
+              <button class="ibtn" title="Clear Chat" onclick="clearChat()"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
+              <button class="ibtn" title="Attach document (upload for AI analysis)" onclick="document.getElementById('docFileInput').click()"><i data-lucide="paperclip" style="width:16px;height:16px;"></i></button>
+              <button class="ibtn" id="voiceBtn" title="Voice input (click to speak)" onclick="toggleVoice()"><i data-lucide="mic" style="width:16px;height:16px;"></i></button>
+              <button class="send-btn" onclick="sendMsg()" title="Send (Enter)"><i data-lucide="send" style="width:16px;height:16px;"></i></button>
+            </div>
+            <input type="file" id="docFileInput" accept=".pdf,.txt,.doc,.docx" style="display:none" onchange="handleFileUpload(event)">
+          </div>
+        </div>
+
+      </div><!-- /panel-chat -->
+
+      <!-- ② DASHBOARD PANEL -->
+      <div class="tab-panel" id="panel-dashboard">
+
+        <div class="panel-hd">
+          <h2>Compliance Dashboard</h2>
+          <p>Real-time overview of your company's legal compliance status — Acme Corp</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card c-gold">
+            <div class="stat-icon"><i data-lucide="scale" style="width:24px;height:24px;color:currentColor;"></i></div>
+            <div class="stat-val">78%</div>
+            <div class="stat-lbl">Overall Compliance Score</div>
+            <div class="stat-delta up">▲ 4% from last month</div>
+          </div>
+          <div class="stat-card c-blue">
+            <div class="stat-icon"><i data-lucide="clipboard-list" style="width:24px;height:24px;color:currentColor;"></i></div>
+            <div class="stat-val">34</div>
+            <div class="stat-lbl">Queries This Month</div>
+            <div class="stat-delta up">▲ 12 more than last month</div>
+          </div>
+          <div class="stat-card c-green">
+            <div class="stat-icon"><i data-lucide="check-circle" style="width:24px;height:24px;color:currentColor;"></i></div>
+            <div class="stat-val">9</div>
+            <div class="stat-lbl">Filings Completed</div>
+            <div class="stat-delta up">▲ On track</div>
+          </div>
+          <div class="stat-card c-purple">
+            <div class="stat-icon"><i data-lucide="alert-triangle" style="width:24px;height:24px;color:currentColor;"></i></div>
+            <div class="stat-val">3</div>
+            <div class="stat-lbl">Pending Actions</div>
+            <div class="stat-delta down">▼ 2 overdue</div>
+          </div>
+        </div>
+
+        <!-- Compliance score + Deadlines -->
+        <div class="dash-row">
+          <div class="dash-card">
+            <h4>Compliance Score Breakdown</h4>
+            <div class="ring-wrap">
+              <div class="ring"><span class="ring-val">78%</span></div>
+              <div class="ring-items">
+                <div class="ring-item">
+                  <span class="ring-item-lbl">GST Filings</span>
+                  <span class="ring-item-val ok">✓ Current</span>
+                </div>
+                <div class="ring-item">
+                  <span class="ring-item-lbl">MCA / ROC</span>
+                  <span class="ring-item-val warn">⚠ 1 Pending</span>
+                </div>
+                <div class="ring-item">
+                  <span class="ring-item-lbl">TDS Returns</span>
+                  <span class="ring-item-val ok">✓ Current</span>
+                </div>
+                <div class="ring-item">
+                  <span class="ring-item-lbl">MSME Registration</span>
+                  <span class="ring-item-val bad">✗ Missing</span>
+                </div>
+                <div class="ring-item">
+                  <span class="ring-item-lbl">DPIIT Recognition</span>
+                  <span class="ring-item-val ok">✓ Active</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dash-card">
+            <h4>Upcoming Deadlines</h4>
+            <div class="deadline-list">
+              <div class="dl-item">
+                <div class="dl-dot urgent"></div>
+                <span class="dl-name">GSTR-3B Filing</span>
+                <span class="dl-date">20 May 2026</span>
+              </div>
+              <div class="dl-item">
+                <div class="dl-dot urgent"></div>
+                <span class="dl-name">TDS Return Q4</span>
+                <span class="dl-date">31 May 2026</span>
+              </div>
+              <div class="dl-item">
+                <div class="dl-dot soon"></div>
+                <span class="dl-name">AOC-4 (Annual Accounts)</span>
+                <span class="dl-date">30 Oct 2026</span>
+              </div>
+              <div class="dl-item">
+                <div class="dl-dot soon"></div>
+                <span class="dl-name">MGT-7 (Annual Return)</span>
+                <span class="dl-date">30 Nov 2026</span>
+              </div>
+              <div class="dl-item">
+                <div class="dl-dot ok"></div>
+                <span class="dl-name">DPIIT Renewal</span>
+                <span class="dl-date">Jan 2027</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /panel-dashboard -->
+
+      <!-- ③ DOCUMENTS PANEL -->
+      <div class="tab-panel" id="panel-documents">
+
+        <div class="panel-hd">
+          <h2>Document Studio</h2>
+          <p>Generate, analyse, and manage legal documents — powered by NitiBot AI</p>
+        </div>
+
+        <!-- Upload zone -->
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('docAnalysisInput').click()"
+          ondragover="event.preventDefault();this.style.borderColor='var(--gold)'"
+          ondragleave="this.style.borderColor=''"
+          ondrop="handleDocDrop(event)">
+          <div class="uz-icon"><i data-lucide="upload-cloud" style="width:32px;height:32px;color:var(--gold);"></i></div>
+          <div class="uz-title">Upload a Document for AI Analysis</div>
+          <div class="uz-sub">Drop a PDF, TXT, or Word document — NitiBot will review it against Indian law</div>
+          <div id="uploadStatus" style="margin-top:10px;font-size:12px;color:var(--gold);display:none;"></div>
+        </div>
+        <input type="file" id="docAnalysisInput" accept=".pdf,.txt,.doc,.docx" style="display:none" onchange="handleDocAnalysis(event)">
+        <!-- Saved Documents section -->
+        <div class="section-title" style="margin-bottom:10px;">💾 Saved Responses <span id="savedCount" style="color:var(--gold);margin-left:6px;">0</span></div>
+        <div id="savedDocsList" style="margin-bottom:20px;display:flex;flex-direction:column;gap:8px;"></div>
+
+        <!-- Template grid -->
+        <div class="section-title">Legal Document Templates</div>
+        <div class="doc-grid">
+          <div class="doc-card" onclick="generateDocument('moa')">
+            <span class="doc-prem">PRO</span>
+            <div class="doc-icon"><i data-lucide="scroll-text" style="width:24px;height:24px;color:currentColor;"></i></div>
+            <div class="doc-title">Memorandum of Association</div>
+            <div class="doc-desc">Auto-filled MOA template for private limited companies</div>
+          </div>
+          <div class="doc-card" onclick="generateDocument('sha')">
+            <span class="doc-prem">PRO</span>
+            <div class="doc-icon"><i data-lucide="handshake" style="width:24px;height:24px;color:currentColor;"></i></div>
+            <div class="doc-title">Shareholder Agreement</div>
+            <div class="doc-desc">Customisable SHA with vesting, drag-along, and tag-along clauses</div>
+          </div>
+          <div class="doc-card" onclick="generateDocument('founder')">
+            <span class="doc-prem">PRO</span>
+            <div class="doc-icon"><i data-lucide="users" style="width:24px;height:24px;color:currentColor;"></i></div>
+            <div class="doc-title">Founder Agreement</div>
+            <div class="doc-desc">IP assignment, roles, equity split, and exit provisions</div>
+          </div>
+          <div class="doc-card" onclick="generateDocument('nda')">
+            <span class="doc-prem">PRO</span>
+            <div class="doc-icon"><i data-lucide="lock" style="width:24px;height:24px;color:currentColor;"></i></div>
+            <div class="doc-title">NDA / Confidentiality</div>
+            <div class="doc-desc">Mutual and one-way NDA templates compliant with Indian Contract Act</div>
+          </div>
+          <div class="doc-card" onclick="generateDocument('employment')">
+            <span class="doc-prem">PRO</span>
+            <div class="doc-icon"><i data-lucide="briefcase" style="width:24px;height:24px;color:currentColor;"></i></div>
+            <div class="doc-title">Employment Agreement</div>
+            <div class="doc-desc">Offer letter + employment contract with IP and non-compete clauses</div>
+          </div>
+          <div class="doc-card" onclick="generateDocument('esop')">
+            <span class="doc-prem">PRO</span>
+            <div class="doc-icon"><i data-lucide="pie-chart" style="width:24px;height:24px;color:currentColor;"></i></div>
+            <div class="doc-title">ESOP Policy</div>
+            <div class="doc-desc">Employee stock option plan compliant with Companies Act 2013</div>
+          </div>
+          <div class="doc-card" onclick="generateDocument('privacy')">
+            <span class="doc-prem">PRO</span>
+            <div class="doc-icon"><i data-lucide="shield-check" style="width:24px;height:24px;color:currentColor;"></i></div>
+            <div class="doc-title">Privacy Policy</div>
+            <div class="doc-desc">DPDP Act 2023 compliant privacy policy for your website/app</div>
+          </div>
+          <div class="doc-card" onclick="generateDocument('gst_invoice')">
+            <span class="doc-prem">PRO</span>
+            <div class="doc-icon"><i data-lucide="receipt" style="width:24px;height:24px;color:currentColor;"></i></div>
+            <div class="doc-title">GST Invoice Template</div>
+            <div class="doc-desc">GSTIN-compliant tax invoice with HSN/SAC codes</div>
+          </div>
+        </div>
+
+      </div><!-- /panel-documents -->
+
+      <!-- ④ ANALYTICS PANEL -->
+      <div class="tab-panel" id="panel-analytics">
+
+        <div class="panel-hd">
+          <h2>Usage Analytics</h2>
+          <p>Insights into your legal queries and compliance activity</p>
+        </div>
+
+        <!-- Bar chart: queries per week -->
+        <div class="chart-card">
+          <h4>Queries Per Week (Last 8 Weeks)</h4>
+          <div class="bar-chart">
+            <div class="bar-col"><div class="bar" style="height:30%"></div><div class="bar-lbl">W1</div></div>
+            <div class="bar-col"><div class="bar" style="height:45%"></div><div class="bar-lbl">W2</div></div>
+            <div class="bar-col"><div class="bar" style="height:38%"></div><div class="bar-lbl">W3</div></div>
+            <div class="bar-col"><div class="bar" style="height:60%"></div><div class="bar-lbl">W4</div></div>
+            <div class="bar-col"><div class="bar" style="height:52%"></div><div class="bar-lbl">W5</div></div>
+            <div class="bar-col"><div class="bar" style="height:75%"></div><div class="bar-lbl">W6</div></div>
+            <div class="bar-col"><div class="bar" style="height:68%"></div><div class="bar-lbl">W7</div></div>
+            <div class="bar-col"><div class="bar" style="height:90%"></div><div class="bar-lbl">W8</div></div>
+          </div>
+        </div>
+
+        <!-- Topic breakdown -->
+        <div class="chart-card">
+          <h4>Top Query Topics</h4>
+          <div class="topic-list">
+            <div class="topic-row">
+              <span class="topic-name">GST &amp; Indirect Tax</span>
+              <div class="topic-bar-bg"><div class="topic-bar-fg" style="width:72%"></div></div>
+              <span class="topic-pct">72%</span>
+            </div>
+            <div class="topic-row">
+              <span class="topic-name">Companies Act / MCA</span>
+              <div class="topic-bar-bg"><div class="topic-bar-fg" style="width:58%"></div></div>
+              <span class="topic-pct">58%</span>
+            </div>
+            <div class="topic-row">
+              <span class="topic-name">SEBI &amp; Capital Markets</span>
+              <div class="topic-bar-bg"><div class="topic-bar-fg" style="width:41%"></div></div>
+              <span class="topic-pct">41%</span>
+            </div>
+            <div class="topic-row">
+              <span class="topic-name">Employment &amp; Labour Law</span>
+              <div class="topic-bar-bg"><div class="topic-bar-fg" style="width:34%"></div></div>
+              <span class="topic-pct">34%</span>
+            </div>
+            <div class="topic-row">
+              <span class="topic-name">IT Act &amp; Data Privacy</span>
+              <div class="topic-bar-bg"><div class="topic-bar-fg" style="width:29%"></div></div>
+              <span class="topic-pct">29%</span>
+            </div>
+            <div class="topic-row">
+              <span class="topic-name">MSME &amp; Startup Policy</span>
+              <div class="topic-bar-bg"><div class="topic-bar-fg" style="width:22%"></div></div>
+              <span class="topic-pct">22%</span>
+            </div>
+          </div>
+        </div>
+        <!-- Monthly summary -->
+        <div class="chart-card">
+          <h4>Monthly Compliance Activity Summary</h4>
+          <div class="topic-list">
+            <div class="topic-row">
+              <span class="topic-name">Documents Generated</span>
+              <div class="topic-bar-bg"><div class="topic-bar-fg" style="width:55%"></div></div>
+              <span class="topic-pct">11</span>
+            </div>
+            <div class="topic-row">
+              <span class="topic-name">Filings Completed</span>
+              <div class="topic-bar-bg"><div class="topic-bar-fg" style="width:45%"></div></div>
+              <span class="topic-pct">9</span>
+            </div>
+            <div class="topic-row">
+              <span class="topic-name">Alerts Triggered</span>
+              <div class="topic-bar-bg"><div class="topic-bar-fg" style="width:20%"></div></div>
+              <span class="topic-pct">4</span>
+            </div>
+            <div class="topic-row">
+              <span class="topic-name">Issues Resolved</span>
+              <div class="topic-bar-bg"><div class="topic-bar-fg" style="width:35%"></div></div>
+              <span class="topic-pct">7</span>
+            </div>
+          </div>
+        </div>
+      </div><!-- /panel-analytics -->
+
+      <!-- ⑤ SETTINGS PANEL -->
+      <div class="tab-panel" id="panel-settings">
+        <div class="panel-hd">
+          <h2>⚙️ Settings</h2>
+          <p>Manage your NitiBot Premium account, AI preferences &amp; integrations</p>
+        </div>
+
+        <!-- ── Settings Search ── -->
+        <div class="settings-search-wrap">
+          <span class="settings-search-icon">🔍</span>
+          <input class="settings-search" type="text" placeholder="Search settings…"
+            oninput="filterSettings(this.value)" id="settingsSearch"/>
+        </div>
+
+        <!-- ── Subscription Card (full-width, outside grid) ── -->
+        <div class="sub-card" id="s-sub-card">
+          <div class="sub-card-icon">👑</div>
+          <div class="sub-card-info">
+            <h4>NitiBot Premium — Active</h4>
+            <p>Unlimited AI queries · 8 document templates · Priority support · Analytics</p>
+            <div class="sub-renews">🔄 Renews on <strong>June 6, 2025</strong> · ₹299/month</div>
+          </div>
+          <button class="sub-manage-btn" onclick="showToast('💳 Billing portal coming soon','info')">Manage Plan</button>
+        </div>
+
+        <!-- ── 2-column settings grid ── -->
+        <div class="settings-grid" id="settingsGrid">
+
+          <!-- ① Profile -->
+          <div class="settings-block" id="sb-profile">
+            <div class="settings-block-title" onclick="toggleBlock(this)">
+              <span>👤 Profile &amp; Company</span><span class="s-chevron">▾</span>
+            </div>
+            <div class="settings-block-body">
+              <div class="setting-row" style="background:rgba(201,168,85,0.04);">
+                <span class="s-icon">👑</span>
+                <div class="s-info">
+                  <h5>Company Onboarding</h5>
+                  <p id="profileStatus">Complete your profile for personalised guidance</p>
+                </div>
+                <button class="msg-act-btn" onclick="openOnboarding()"
+                  style="background:linear-gradient(135deg,#c9a855,#a07830);color:#080b10;font-weight:700;">Setup</button>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">🏢</span>
+                <div class="s-info">
+                  <h5>Company Name</h5>
+                  <p id="settingsCompanyName">Acme Corp Pvt. Ltd.</p>
+                </div>
+                <button class="msg-act-btn" onclick="openOnboarding()">Edit</button>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">📧</span>
+                <div class="s-info">
+                  <h5>Email Address</h5>
+                  <p>admin@acmecorp.in</p>
+                </div>
+                <input class="s-input" type="email" value="admin@acmecorp.in"
+                  onblur="showToast('✅ Email updated','success')" style="width:160px;"/>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">🏛️</span>
+                <div class="s-info">
+                  <h5>Business Jurisdiction</h5>
+                  <p>Primary state of incorporation</p>
+                </div>
+                <select class="s-select" onchange="showToast('✅ Jurisdiction updated','success')">
+                  <option>Maharashtra</option><option>Delhi</option>
+                  <option>Karnataka</option><option>Tamil Nadu</option>
+                  <option>Telangana</option><option>Gujarat</option>
+                  <option>Rajasthan</option><option>West Bengal</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">📋</span>
+                <div class="s-info">
+                  <h5>Business Type</h5>
+                  <p>Legal entity classification</p>
+                </div>
+                <select class="s-select" onchange="showToast('✅ Business type updated','success')">
+                  <option>Pvt. Ltd.</option><option>LLP</option>
+                  <option>OPC</option><option>Partnership</option><option>Sole Proprietor</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- ② AI Preferences -->
+          <div class="settings-block" id="sb-ai">
+            <div class="settings-block-title" onclick="toggleBlock(this)">
+              <span>🤖 AI Preferences</span><span class="s-chevron">▾</span>
+            </div>
+            <div class="settings-block-body">
+              <div class="setting-row">
+                <span class="s-icon">📚</span>
+                <div class="s-info">
+                  <h5>Source Citations <span class="s-badge s-badge-premium">PREMIUM</span></h5>
+                  <p>Show legal act sections alongside responses</p>
+                </div>
+                <div class="toggle on" onclick="toggleSetting(this,'Source Citations')"></div>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">🧠</span>
+                <div class="s-info">
+                  <h5>Conversation Memory <span class="s-badge s-badge-premium">PREMIUM</span></h5>
+                  <p>Retain context across your sessions (last 6 turns)</p>
+                </div>
+                <div class="toggle on" onclick="toggleSetting(this,'Conversation Memory')"></div>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">🌡️</span>
+                <div class="s-info">
+                  <h5>Response Detail Level</h5>
+                  <p>How comprehensive should AI answers be?</p>
+                </div>
+                <select class="s-select" onchange="showToast('✅ Detail level updated','success')">
+                  <option>Detailed</option><option>Concise</option><option>Expert</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">🌐</span>
+                <div class="s-info">
+                  <h5>Response Language</h5>
+                  <p>Language for AI responses</p>
+                </div>
+                <select class="s-select" onchange="showToast('✅ Language updated','success')">
+                  <option>English</option><option>Hindi</option>
+                  <option>Marathi</option><option>Tamil</option><option>Telugu</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">🎙️</span>
+                <div class="s-info">
+                  <h5>Voice Input <span class="s-badge s-badge-new">NEW</span></h5>
+                  <p>Enable microphone for voice queries</p>
+                </div>
+                <div class="toggle on" onclick="toggleSetting(this,'Voice Input')"></div>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">✍️</span>
+                <div class="s-info">
+                  <h5>Auto-fill Documents</h5>
+                  <p>Use company profile to pre-fill legal templates</p>
+                </div>
+                <div class="toggle on" onclick="toggleSetting(this,'Auto-fill Documents')"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ③ Notifications -->
+          <div class="settings-block" id="sb-notif">
+            <div class="settings-block-title" onclick="toggleBlock(this)">
+              <span>🔔 Notifications &amp; Alerts</span><span class="s-chevron">▾</span>
+            </div>
+            <div class="settings-block-body">
+              <div class="setting-row">
+                <span class="s-icon">⏰</span>
+                <div class="s-info">
+                  <h5>Compliance Deadline Alerts</h5>
+                  <p>Reminders 7 days before key filing dates</p>
+                </div>
+                <div class="toggle on" onclick="toggleSetting(this,'Deadline Alerts')"></div>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">📨</span>
+                <div class="s-info">
+                  <h5>Weekly Digest Email</h5>
+                  <p>Compliance summary every Monday</p>
+                </div>
+                <div class="toggle" onclick="toggleSetting(this,'Weekly Digest')"></div>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">📰</span>
+                <div class="s-info">
+                  <h5>Regulatory Update Alerts</h5>
+                  <p>Notified when GST / MCA / SEBI rules change</p>
+                </div>
+                <div class="toggle on" onclick="toggleSetting(this,'Regulatory Alerts')"></div>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">📅</span>
+                <div class="s-info">
+                  <h5>Calendar Sync <span class="s-badge s-badge-new">NEW</span></h5>
+                  <p>Push deadlines to Google / Outlook Calendar</p>
+                </div>
+                <div class="toggle" onclick="toggleSetting(this,'Calendar Sync')"></div>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">📱</span>
+                <div class="s-info">
+                  <h5>WhatsApp Alerts <span class="s-badge s-badge-premium">PREMIUM</span></h5>
+                  <p>Get urgent compliance alerts on WhatsApp</p>
+                </div>
+                <div class="toggle" onclick="toggleSetting(this,'WhatsApp Alerts')"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ④ Security -->
+          <div class="settings-block" id="sb-security">
+            <div class="settings-block-title" onclick="toggleBlock(this)">
+              <span>🔐 Security &amp; Access</span><span class="s-chevron">▾</span>
+            </div>
+            <div class="settings-block-body">
+              <div class="setting-row">
+                <span class="s-icon">🔐</span>
+                <div class="s-info">
+                  <h5>Two-Factor Authentication</h5>
+                  <p>Extra layer of security (TOTP-based)</p>
+                </div>
+                <div class="toggle" onclick="toggleSetting(this,'2FA')"></div>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">🗝️</span>
+                <div class="s-info">
+                  <h5>API Access Key</h5>
+                  <p style="font-family:monospace;letter-spacing:0.5px;">nb_live_•••••••••4f2a</p>
+                </div>
+                <button class="msg-act-btn" onclick="copyApiKey()">Copy</button>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">🔄</span>
+                <div class="s-info">
+                  <h5>Regenerate API Key</h5>
+                  <p>Invalidates the current key immediately</p>
+                </div>
+                <button class="msg-act-btn" style="color:#f59e0b;border-color:rgba(245,158,11,0.3);"
+                  onclick="regenApiKey()">Regenerate</button>
+              </div>
+              <div class="setting-row">
+                <span class="s-icon">🛡️</span>
+                <div class="s-info">
+                  <h5>Session Timeout</h5>
+                  <p>Auto-logout after inactivity</p>
+                </div>
+                <select class="s-select" onchange="showToast('✅ Session timeout updated','success')">
+                  <option>30 minutes</option><option>1 hour</option>
+                  <option>4 hours</option><option>Never</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- ⑤ Flowise Integration (full-width) -->
+          <div class="settings-block full-width" id="sb-flowise">
+            <div class="settings-block-title" onclick="toggleBlock(this)">
+              <span>⚡ Flowise AI Integration</span>
+              <span style="display:flex;align-items:center;gap:8px;">
+                <span class="cfg-status">
+                  <span class="cfg-dot" id="cfgDot2"></span>
+                  <span id="cfgStatus2">NOT CONFIGURED</span>
+                </span>
+                <span class="s-chevron">▾</span>
+              </span>
+            </div>
+            <div class="settings-block-body flowise-cfg">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="cfg-row">
+                  <label class="cfg-label">Flowise URL</label>
+                  <input class="cfg-input" id="cfgUrl2" placeholder="http://localhost:3000"
+                    onblur="saveCfgFromSettings()"/>
+                </div>
+                <div class="cfg-row">
+                  <label class="cfg-label">Chatflow ID</label>
+                  <input class="cfg-input" id="cfgId2" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                    onblur="saveCfgFromSettings()"/>
+                </div>
+                <div class="cfg-row">
+                  <label class="cfg-label">API Key (Bearer)</label>
+                  <input class="cfg-input" id="cfgKey2" type="password" placeholder="flowise-api-key"
+                    onblur="saveCfgFromSettings()"/>
+                </div>
+                <div class="cfg-row">
+                  <label class="cfg-label">User ID (Premium Gate)</label>
+                  <input class="cfg-input" id="cfgUser2" placeholder="user@startup.in"
+                    onblur="saveCfgFromSettings()"/>
+                </div>
+              </div>
+              <div class="cfg-actions">
+                <button class="msg-act-btn" onclick="testFlowiseFromSettings()"
+                  style="background:linear-gradient(135deg,#c9a855,#a07830);color:#080b10;font-weight:700;">
+                  🔌 Test Connection
+                </button>
+                <button class="msg-act-btn" onclick="saveCfgFromSettings()">💾 Save</button>
+                <span class="cfg-status" id="cfgStatusFull">
+                  <span class="cfg-dot" id="cfgDotFull"></span>
+                  <span id="cfgStatusTxt">Awaiting test…</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ⑥ Recent Activity Log (full-width) -->
+          <div class="settings-block full-width" id="sb-audit">
+            <div class="settings-block-title" onclick="toggleBlock(this)">
+              <span>📜 Recent Activity Log</span>
+              <span style="display:flex;align-items:center;gap:8px;">
+                <button class="msg-act-btn" onclick="event.stopPropagation();exportAuditLog()"
+                  style="padding:3px 10px;font-size:10px;">Export JSON</button>
+                <span class="s-chevron">▾</span>
+              </span>
+            </div>
+            <div class="settings-block-body" id="auditLogList">
+              <div class="audit-row">
+                <span class="audit-time">Just now</span>
+                <span class="audit-action">Settings panel viewed</span>
+                <span class="audit-badge" style="background:rgba(59,130,246,0.15);color:#3b82f6;">VIEW</span>
+              </div>
+              <div class="audit-row">
+                <span class="audit-time">10:42 AM</span>
+                <span class="audit-action">AI query — GST registration threshold</span>
+                <span class="audit-badge" style="background:rgba(201,168,85,0.15);color:var(--gold);">QUERY</span>
+              </div>
+              <div class="audit-row">
+                <span class="audit-time">Yesterday</span>
+                <span class="audit-action">Company profile updated</span>
+                <span class="audit-badge" style="background:rgba(34,197,94,0.15);color:var(--green);">EDIT</span>
+              </div>
+              <div class="audit-row">
+                <span class="audit-time">2 days ago</span>
+                <span class="audit-action">MOA document generated &amp; downloaded</span>
+                <span class="audit-badge" style="background:rgba(168,85,247,0.15);color:#a855f7;">DOC</span>
+              </div>
+              <div class="audit-row">
+                <span class="audit-time">3 days ago</span>
+                <span class="audit-action">PDF export — SEBI compliance query</span>
+                <span class="audit-badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">EXPORT</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ⑦ Account Management — Danger Zone (full-width) -->
+          <div class="settings-block full-width" id="sb-account">
+            <div class="settings-block-title" onclick="toggleBlock(this)" style="color:#ef4444;">
+              <span>⚠️ Account Management</span><span class="s-chevron">▾</span>
+            </div>
+            <div class="settings-block-body danger-zone">
+              <button class="danger-btn danger-btn-export" onclick="exportAllData()">
+                📥 Export All Data
+              </button>
+              <button class="danger-btn" style="flex:1;min-width:140px;padding:9px 14px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(249,115,22,0.07);border:1px solid rgba(249,115,22,0.25);color:#f97316;"
+                onclick="showToast('📧 Contact support@nitibot.in to cancel','info')">
+                ❌ Cancel Subscription
+              </button>
+              <button class="danger-btn danger-btn-delete"
+                onclick="if(confirm('Permanently delete all your NitiBot data? This cannot be undone.')) showToast('📧 Deletion request sent to support','info')">
+                🗑️ Delete Account
+              </button>
+            </div>
+          </div>
+
+        </div><!-- /settings-grid -->
+      </div><!-- /panel-settings -->
+
+
+      <!-- ⑥ COMPLIANCE CALENDAR PANEL -->
+      <div class="tab-panel" id="panel-calendar">
+        <div class="panel-hd">
+          <h2>🗓️ Compliance Calendar</h2>
+          <p>Track all upcoming statutory deadlines — GST, MCA, TDS, SEBI and more</p>
+        </div>
+        <!-- Month navigation -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+          <button onclick="calPrevMonth()" style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:7px 14px;color:var(--text-secondary);cursor:pointer;font-size:13px;">‹ Prev</button>
+          <div id="calMonthTitle" style="font-size:16px;font-weight:700;color:var(--gold);"></div>
+          <button onclick="calNextMonth()" style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:7px 14px;color:var(--text-secondary);cursor:pointer;font-size:13px;">Next ›</button>
+        </div>
+        <!-- Calendar grid -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:18px;">
+          <div id="calGrid" style="display:grid;grid-template-columns:repeat(7,1fr);"></div>
+        </div>
+        <!-- Upcoming deadlines list -->
+        <div class="section-title" style="margin-bottom:10px;">📋 All Compliance Deadlines</div>
+        <div id="calDeadlineList" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+
+      <!-- ⑦ SMART ALERTS PANEL -->
+      <div class="tab-panel" id="panel-alerts">
+        <div class="panel-hd">
+          <h2>🔔 Smart Alerts</h2>
+          <p>Configure compliance deadline reminders and regulatory change notifications</p>
+        </div>
+        <!-- Active alerts -->
+        <div class="settings-block">
+          <div class="settings-block-title">Active Notifications (3)</div>
+          <div class="setting-row" style="background:rgba(239,68,68,0.05);">
+            <span class="s-icon">🚨</span>
+            <div class="s-info">
+              <h5 style="color:#ef4444;">GSTR-3B Due in 14 Days</h5>
+              <p>Monthly GST return — Due: 20 May 2026</p>
+            </div>
+            <span style="font-size:10px;background:rgba(239,68,68,0.15);color:#ef4444;padding:3px 9px;border-radius:6px;font-weight:700;">URGENT</span>
+          </div>
+          <div class="setting-row" style="background:rgba(201,168,85,0.04);">
+            <span class="s-icon">⚠️</span>
+            <div class="s-info">
+              <h5 style="color:var(--gold);">TDS Return Q4 Due in 25 Days</h5>
+              <p>TDS return filing — Due: 31 May 2026</p>
+            </div>
+            <span style="font-size:10px;background:rgba(201,168,85,0.15);color:var(--gold);padding:3px 9px;border-radius:6px;font-weight:700;">DUE SOON</span>
+          </div>
+          <div class="setting-row">
+            <span class="s-icon">📋</span>
+            <div class="s-info">
+              <h5>MSME Registration Missing</h5>
+              <p>Your compliance score is affected — Register on Udyam Portal</p>
+            </div>
+            <button class="msg-act-btn" onclick="fillChat('How do I register on Udyam Portal for MSME?');switchTab('chat',document.getElementById('tab-chat'))">Ask NitiBot</button>
+          </div>
+        </div>
+        <!-- Alert configuration -->
+        <div class="settings-block">
+          <div class="settings-block-title">Alert Configuration</div>
+          <div class="setting-row">
+            <span class="s-icon">🔔</span>
+            <div class="s-info"><h5>Deadline Reminders</h5><p>Notify 7 days before filing dates</p></div>
+            <div class="toggle on" onclick="toggleSetting(this,'Deadline Reminders')"></div>
+          </div>
+          <div class="setting-row">
+            <span class="s-icon">📰</span>
+            <div class="s-info"><h5>Regulatory Change Alerts</h5><p>GST, MCA, SEBI rule updates</p></div>
+            <div class="toggle on" onclick="toggleSetting(this,'Regulatory Alerts')"></div>
+          </div>
+          <div class="setting-row">
+            <span class="s-icon">📨</span>
+            <div class="s-info"><h5>Weekly Digest Email</h5><p>Monday morning compliance summary</p></div>
+            <div class="toggle" onclick="toggleSetting(this,'Weekly Digest')"></div>
+          </div>
+          <div class="setting-row">
+            <span class="s-icon">📱</span>
+            <div class="s-info"><h5>WhatsApp Alerts</h5><p>Get critical deadlines on WhatsApp (Premium)</p></div>
+            <div class="toggle" onclick="toggleSetting(this,'WhatsApp Alerts')"></div>
+          </div>
+        </div>
+        <!-- Add custom alert -->
+        <div class="settings-block">
+          <div class="settings-block-title">➕ Add Custom Alert</div>
+          <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
+            <input id="alertName" placeholder="Alert name (e.g. Board Meeting Notice)" style="width:100%;background:var(--bg-surface);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text-primary);font-size:13px;outline:none;box-sizing:border-box;">
+            <input id="alertDate" type="date" style="width:100%;background:var(--bg-surface);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text-primary);font-size:13px;outline:none;box-sizing:border-box;">
+            <button onclick="addCustomAlert()" style="background:linear-gradient(135deg,var(--gold-dim),var(--gold));border:none;border-radius:8px;padding:10px 20px;color:#080b10;font-weight:700;font-size:13px;cursor:pointer;">Add Alert</button>
+          </div>
+        </div>
+        <!-- Custom alerts list -->
+        <div id="customAlertsList" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+
+      <!-- ⑧ PRIORITY SUPPORT PANEL -->
+      <div class="tab-panel" id="panel-support">
+        <div class="panel-hd">
+          <h2>🎧 Priority Support</h2>
+          <p>Premium members get priority access to our legal compliance team</p>
+        </div>
+        <!-- Premium support badge -->
+        <div style="background:linear-gradient(135deg,rgba(201,168,85,0.12),rgba(201,168,85,0.04));border:1px solid rgba(201,168,85,0.3);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
+          <div style="font-size:40px;">👑</div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--gold);margin-bottom:4px;">Premium Support Active</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Average response time: <strong style="color:var(--green);">2 hours</strong> · Available Mon–Sat 9AM–6PM IST</div>
+          </div>
+        </div>
+        <!-- Contact options -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
+          <div class="stat-card c-gold" style="cursor:pointer;" onclick="showToast('📧 Opening email client…');window.location.href='mailto:premium@nitibot.in'">
+            <div class="stat-icon">📧</div>
+            <div class="stat-val" style="font-size:14px;">Email Support</div>
+            <div class="stat-lbl">premium@nitibot.in</div>
+          </div>
+          <div class="stat-card c-blue" style="cursor:pointer;" onclick="showToast('💬 WhatsApp support: +91-99999-00000')">
+            <div class="stat-icon">💬</div>
+            <div class="stat-val" style="font-size:14px;">WhatsApp</div>
+            <div class="stat-lbl">+91-99999-00000</div>
+          </div>
+          <div class="stat-card c-green" style="cursor:pointer;" onclick="showToast('📅 Scheduling call… feature coming soon')">
+            <div class="stat-icon">📅</div>
+            <div class="stat-val" style="font-size:14px;">Schedule Call</div>
+            <div class="stat-lbl">Book a 30-min session</div>
+          </div>
+          <div class="stat-card c-purple" style="cursor:pointer;" onclick="showToast('📚 Opening documentation…')">
+            <div class="stat-icon">📚</div>
+            <div class="stat-val" style="font-size:14px;">Knowledge Base</div>
+            <div class="stat-lbl">docs.nitibot.in</div>
+          </div>
+        </div>
+        <!-- Submit ticket -->
+        <div class="settings-block">
+          <div class="settings-block-title">🎫 Submit a Support Ticket</div>
+          <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
+            <select id="ticketCategory" style="width:100%;background:var(--bg-surface);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text-primary);font-size:13px;outline:none;box-sizing:border-box;">
+              <option value="">Select category…</option>
+              <option>GST / Indirect Tax Query</option>
+              <option>MCA / Company Law</option>
+              <option>SEBI / Capital Markets</option>
+              <option>Employment / HR Law</option>
+              <option>Document Review Request</option>
+              <option>Technical Issue</option>
+              <option>Billing / Subscription</option>
+            </select>
+            <input id="ticketSubject" placeholder="Subject" style="width:100%;background:var(--bg-surface);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text-primary);font-size:13px;outline:none;box-sizing:border-box;">
+            <textarea id="ticketDesc" rows="4" placeholder="Describe your issue in detail…" style="width:100%;background:var(--bg-surface);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text-primary);font-size:13px;outline:none;resize:vertical;box-sizing:border-box;font-family:inherit;"></textarea>
+            <button onclick="submitTicket()" style="background:linear-gradient(135deg,var(--gold-dim),var(--gold));border:none;border-radius:8px;padding:10px 24px;color:#080b10;font-weight:700;font-size:13px;cursor:pointer;letter-spacing:.5px;">Submit Ticket →</button>
+          </div>
+        </div>
+        <!-- Ticket history -->
+        <div id="ticketHistory" style="margin-top:4px;"></div>
+      </div>
+    </div><!-- /tab-panels -->
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  if(window.lucide) window.lucide.createIcons();
+});
+/* ═══════════════════════════════════════════════════════════════
+   NITIBOT PREMIUM — FULLY UPGRADED JS ENGINE
+   Features: Real Flowise API, streaming, formatText, clearChat,
+             setFilter, onboarding flow, premium gate, model badge
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Config store (persisted in localStorage) ── */
+const config = {
+  url:        localStorage.getItem('nb_url')  || 'http://localhost:3000',
+  chatflowId: localStorage.getItem('nb_cfid') || '',
+  apiKey:     localStorage.getItem('nb_key')  || '',
+  userId:     localStorage.getItem('nb_uid')  || '',
+};
+
+/* ── Session / History / State ── */
+function generateId() { return 'nb_' + Math.random().toString(36).slice(2, 11) + Date.now().toString(36); }
+let sessionId   = localStorage.getItem('nb_session') || generateId();
+localStorage.setItem('nb_session', sessionId);
+let chatHistory = [];
+let allSessions = JSON.parse(localStorage.getItem('nb_all_sessions')) || [];
+let isStreaming  = false;
+let activeFilter = '';
+let obCurrentStep = 1;
+const obTotalSteps = 5;
+
+/* ── Company profile ── */
+let companyProfile = JSON.parse(localStorage.getItem('nb_profile') || '{}');
+
+/* ══════════════════════════════════════════════════════════════
+   TAB SWITCHING
+═══════════════════════════════════════════════════════════════ */
+function switchTab(name, clicked) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const panel = document.getElementById('panel-' + name);
+  const tab   = document.getElementById('tab-' + name);
+  if (panel) panel.classList.add('active');
+  if (tab)   tab.classList.add('active');
+  if (clicked) clicked.classList.add('active');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+═══════════════════════════════════════════════════════════════ */
+function showToast(msg, type='info') {
+  const t = document.createElement('div');
+  const colors = { info:'rgba(201,168,85,0.12)', success:'rgba(80,200,100,0.12)', error:'rgba(200,80,80,0.12)' };
+  const borders = { info:'rgba(201,168,85,0.3)', success:'rgba(80,200,100,0.3)', error:'rgba(200,80,80,0.3)' };
+  t.style.cssText = `position:fixed;bottom:24px;right:24px;background:${colors[type]};backdrop-filter:blur(10px);border:1px solid ${borders[type]};border-radius:10px;padding:12px 20px;color:#e0d5bb;font-size:13px;z-index:9999;max-width:320px;animation:toastIn .3s ease;`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(()=>t.remove(),400); }, 3500);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CONFIG PANEL
+═══════════════════════════════════════════════════════════════ */
+function openConfig() {
+  const ov = document.getElementById('configOverlay');
+  ov.style.display = 'flex';
+  document.getElementById('flowiseUrl').value  = config.url;
+  document.getElementById('chatflowId').value  = config.chatflowId;
+  document.getElementById('cfApiKey').value    = config.apiKey;
+  document.getElementById('cfUserId').value    = config.userId;
+}
+
+function closeConfig() {
+  document.getElementById('configOverlay').style.display = 'none';
+}
+
+function saveConfig() {
+  config.url        = document.getElementById('flowiseUrl').value.trim().replace(/\/$/,'');
+  config.chatflowId = document.getElementById('chatflowId').value.trim();
+  config.apiKey     = document.getElementById('cfApiKey').value.trim();
+  config.userId     = document.getElementById('cfUserId').value.trim();
+  localStorage.setItem('nb_url',  config.url);
+  localStorage.setItem('nb_cfid', config.chatflowId);
+  localStorage.setItem('nb_key',  config.apiKey);
+  localStorage.setItem('nb_uid',  config.userId);
+  closeConfig();
+  updateStatus(!!config.chatflowId, config.chatflowId ? 'CONNECTED' : 'NOT CONFIGURED');
+  showToast('✅ Configuration saved!', 'success');
+}
+
+async function testConnection() {
+  const url        = document.getElementById('flowiseUrl').value.trim().replace(/\/$/, '');
+  const chatflowId = document.getElementById('chatflowId').value.trim();
+  const apiKey     = document.getElementById('cfApiKey').value.trim();
+  if (!chatflowId) { showToast('⚠ Enter a Chatflow ID first'); return; }
+  const btn = document.getElementById('testBtn');
+  btn.textContent = 'TESTING…';
+  btn.disabled = true;
+  const statusDiv = document.getElementById('configStatus');
+  statusDiv.style.display = 'block';
+  statusDiv.textContent = 'Testing connection…';
+  const endpoint = `${url}/api/v1/prediction/${chatflowId}`;
+  const headers  = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+  if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+  try {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 10000);
+    const res = await fetch(endpoint, {
+      method: 'POST', mode: 'cors', headers,
+      body: JSON.stringify({ question: 'ping', sessionId: 'test' }),
+      signal: controller.signal,
+    });
+    if (res.ok || res.status === 400) {
+      statusDiv.style.color = '#50c864';
+      statusDiv.textContent = '✅ Flowise is reachable! Chatflow ID looks valid.';
+      showToast('✅ Connection successful!', 'success');
+    } else {
+      statusDiv.style.color = '#e05555';
+      statusDiv.textContent = `⚠ Got HTTP ${res.status} — check your Chatflow ID.`;
+    }
+  } catch(e) {
+    statusDiv.style.color = '#e05555';
+    statusDiv.textContent = e.name === 'AbortError'
+      ? '⏱ Timed out. Is Flowise running?'
+      : '❌ Cannot reach Flowise. Make sure it is running on the configured URL.';
+  } finally {
+    btn.textContent = 'TEST';
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('configOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeConfig();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   STATUS DOT
+═══════════════════════════════════════════════════════════════ */
+function updateStatus(connected, text) {
+  const dot  = document.getElementById('statusDot');
+  const span = document.getElementById('statusText');
+  if (!dot || !span) return;
+  dot.style.background   = connected ? '#50c864' : '#e05555';
+  dot.style.boxShadow    = connected ? '0 0 6px #50c864' : '0 0 6px #e05555';
+  span.textContent       = text || (connected ? 'CONNECTED' : 'DISCONNECTED');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FLOWISE API CALL
+═══════════════════════════════════════════════════════════════ */
+async function callFlowise(question) {
+  if (!config.chatflowId) {
+    showToast('⚙ Set your Chatflow ID in settings first');
+    openConfig();
+    throw new Error('No Chatflow ID configured. Click ⚙ to set it.');
+  }
+  const endpoint = `${config.url}/api/v1/prediction/${config.chatflowId}`;
+  const body = {
+    question,
+    overrideConfig: activeFilter ? { chromaMetadataFilter: { source: activeFilter } } : {},
+    history: chatHistory.slice(-6).map(h => ({
+      role: h.role === 'user' ? 'userMessage' : 'apiMessage',
+      content: h.content,
+    })),
+    sessionId,
+  };
+  if (config.userId) body.userId = config.userId;
+  const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+  if (config.apiKey) headers['Authorization'] = `Bearer ${config.apiKey}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 60000);
+  let res;
+  try {
+    res = await fetch(endpoint, {
+      method: 'POST', mode: 'cors', headers,
+      body: JSON.stringify(body), signal: controller.signal,
+    });
+  } catch(err) {
+    clearTimeout(timer);
+    if (err.name === 'AbortError') throw new Error('Request timed out after 60s. Is Flowise running?');
+    throw new Error('Cannot reach Flowise.\n1. Run: npx flowise start\n2. Open via http:// not file://\n3. Check your URL in ⚙ settings');
+  }
+  clearTimeout(timer);
+  if (!res.ok) {
+    let txt = ''; try { txt = await res.text(); } catch(_) {}
+    throw new Error(`Flowise returned ${res.status}: ${txt.slice(0, 160) || 'no details'}`);
+  }
+  let data; try { data = await res.json(); } catch(_) {
+    throw new Error('Flowise returned non-JSON. Check your Chatflow ID.');
+  }
+  return data;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CHAT HELPERS
+═══════════════════════════════════════════════════════════════ */
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatText(str) {
+  return escapeHtml(str)
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,     '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code style="font-family:monospace;font-size:12px;background:rgba(201,168,85,0.1);padding:1px 5px;border-radius:3px;color:#c9a855;">$1</code>')
+    .replace(/\n/g, '<br>');
+}
+
+function timestamp() {
+  return new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+}
+
+function scrollBottom() {
+  const el = document.getElementById('chatMessages');
+  if (el) el.scrollTop = el.scrollHeight;
+}
+
+function updateMemoryIndicator() {
+  const depth = document.getElementById('memDepth');
+  if (depth) depth.textContent = `${chatHistory.length} turns`;
+  const ss = document.getElementById('sessionShort');
+  if (ss) ss.textContent = sessionId.slice(-6);
+}
+
+function appendUserMsg(text) {
+  const msgs = document.getElementById('chatMessages');
+  const row = document.createElement('div');
+  row.className = 'msg-row user';
+  row.innerHTML = `
+    <div class="msg-body" style="align-items:flex-end;">
+      <div class="msg-bubble" style="background:rgba(201,168,85,0.1);border-color:rgba(201,168,85,0.25);">${formatText(text)}</div>
+      <div class="msg-meta">${timestamp()}</div>
+    </div>
+    <div class="msg-av user" style="background:linear-gradient(135deg,#c9a855,#a07830);color:#080b10;">U</div>`;
+  msgs.appendChild(row);
+  scrollBottom();
+  return row;
+}
+
+function appendTyping() {
+  const msgs = document.getElementById('chatMessages');
+  const row = document.createElement('div');
+  row.className = 'msg-row bot';
+  row.id = 'typingRow';
+  row.innerHTML = `
+    <div class="msg-av bot">N</div>
+    <div class="msg-body">
+      <div class="msg-bubble" id="streamBubble" style="min-width:60px;">
+        <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+      </div>
+    </div>`;
+  msgs.appendChild(row);
+  scrollBottom();
+  return row;
+}
+
+async function streamText(el, text) {
+  el.innerHTML = '';
+  const cursor = document.createElement('span');
+  cursor.className = 'stream-cursor';
+  cursor.style.cssText = 'display:inline-block;width:2px;height:14px;background:#c9a855;margin-left:2px;vertical-align:middle;animation:blink .7s infinite;';
+  el.appendChild(cursor);
+  const chunkSize = Math.max(1, Math.floor(text.length / 60));
+  for (let i = 0; i <= text.length; i += chunkSize) {
+    const chunk = text.slice(0, i);
+    el.textContent = chunk;
+    el.appendChild(cursor);
+    scrollBottom();
+    await new Promise(r => setTimeout(r, 16));
+  }
+  el.textContent = text;
+  scrollBottom();
+}
+
+function finalizeBotMsg(typingRow, answer, sources) {
+  if (!typingRow) return;
+  const bubble = typingRow.querySelector('#streamBubble') || typingRow.querySelector('.msg-bubble');
+  if (bubble) {
+    bubble.id = '';
+    bubble.innerHTML = formatText(answer);
+    // Add source citation chips if any
+    if (sources && sources.length > 0) {
+      const srcDiv = document.createElement('div');
+      srcDiv.style.cssText = 'margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;';
+      sources.forEach(s => {
+        const chip = document.createElement('span');
+        chip.style.cssText = 'font-size:10px;background:rgba(201,168,85,0.1);border:1px solid rgba(201,168,85,0.2);border-radius:4px;padding:2px 8px;color:#c9a855;cursor:pointer;';
+        chip.textContent = '📄 ' + (s.metadata?.source || s.pageContent?.slice(0,30) || 'Source');
+        chip.title = s.pageContent || '';
+        srcDiv.appendChild(chip);
+      });
+      bubble.appendChild(srcDiv);
+    }
+    // Add meta row with save/export buttons (premium)
+    const metaRow = document.createElement('div');
+    metaRow.style.cssText = 'display:flex;gap:8px;margin-top:8px;font-size:10px;';
+    metaRow.innerHTML = `<span style="color:#6a5f45;">${timestamp()}</span><span style="margin-left:auto;display:flex;gap:6px;">
+      <button onclick="saveResponse(this)" style="background:transparent;border:1px solid rgba(201,168,85,0.2);border-radius:4px;padding:2px 8px;color:#c9a855;font-size:10px;cursor:pointer;">💾 Save</button>
+      <button onclick="exportPDF(this)" style="background:transparent;border:1px solid rgba(201,168,85,0.2);border-radius:4px;padding:2px 8px;color:#c9a855;font-size:10px;cursor:pointer;">📄 PDF</button>
+    </span>`;
+    typingRow.querySelector('.msg-body').appendChild(metaRow);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SAVE & EXPORT RESPONSES (Premium Features)
+═══════════════════════════════════════════════════════════════ */
+let savedResponses = JSON.parse(localStorage.getItem('nb_saved_responses') || '[]');
+
+function saveResponse(btn) {
+  const msgRow = btn.closest('.msg-row');
+  const bubble = msgRow.querySelector('.msg-bubble');
+  const content = bubble.textContent || bubble.innerText;
+  const timestamp = new Date().toISOString();
+  
+  const saved = {
+    id: generateId(),
+    content: content,
+    timestamp: timestamp,
+    date: new Date().toLocaleDateString('en-IN'),
+    sources: Array.from(msgRow.querySelectorAll('.src-chip')).map(c => c.textContent)
+  };
+  
+  savedResponses.unshift(saved);
+  localStorage.setItem('nb_saved_responses', JSON.stringify(savedResponses));
+  
+  showToast('💾 Response saved to Documents tab', 'success');
+  btn.textContent = '✅ Saved';
+  btn.disabled = true;
+}
+
+function exportPDF(btn) {
+  const msgRow = btn.closest('.msg-row');
+  const bubble = msgRow.querySelector('.msg-bubble');
+  const content = bubble.textContent || bubble.innerText;
+  const sources = Array.from(msgRow.querySelectorAll('.src-chip')).map(c => c.textContent);
+  
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(201, 168, 85);
+    doc.text('NitiBot Premium', 20, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(138, 122, 112);
+    doc.text('AI Legal Compliance Assistant', 20, 28);
+    doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, 20, 34);
+    
+    // Company info if available
+    if (companyProfile.name) {
+      doc.text(`Company: ${companyProfile.name}`, 20, 40);
+    }
+    
+    // Line separator
+    doc.setDrawColor(201, 168, 85);
+    doc.setLineWidth(0.5);
+    doc.line(20, 45, 190, 45);
+    
+    // Content
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    const splitContent = doc.splitTextToSize(content, 170);
+    doc.text(splitContent, 20, 55);
+    
+    // Sources
+    if (sources.length > 0) {
+      const sourcesY = 55 + (splitContent.length * 7) + 10;
+      doc.setFontSize(10);
+      doc.setTextColor(201, 168, 85);
+      doc.text('Sources:', 20, sourcesY);
+      doc.setTextColor(100, 100, 100);
+      sources.forEach((src, i) => {
+        doc.text(`• ${src}`, 25, sourcesY + 7 + (i * 6));
+      });
+    }
+    
+    // Footer
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text('This document is for informational purposes only and does not constitute legal advice.', 20, 280);
+    doc.text('Consult a qualified legal professional for specific guidance.', 20, 285);
+    
+    // Save
+    const filename = `NitiBot_Response_${Date.now()}.pdf`;
+    doc.save(filename);
+    
+    showToast('📄 PDF exported successfully!', 'success');
+    btn.textContent = '✅ Exported';
+    setTimeout(() => { btn.textContent = '📄 PDF'; }, 2000);
+  } catch (err) {
+    console.error('PDF export error:', err);
+    showToast('⚠️ PDF export failed. jsPDF library may not be loaded.', 'error');
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DOCUMENT GENERATION (Premium Feature)
+═══════════════════════════════════════════════════════════════ */
+function generateDocument(docType) {
+  if (!companyProfile.name) {
+    showToast('⚠️ Please complete company onboarding first', 'error');
+    openOnboarding();
+    return;
+  }
+  
+  const templates = {
+    moa: generateMOA,
+    sha: generateSHA,
+    founder: generateFounderAgreement,
+    nda: generateNDA,
+    employment: generateEmploymentAgreement,
+    esop: generateESOPPolicy,
+    privacy: generatePrivacyPolicy,
+    gst_invoice: generateGSTInvoice
+  };
+  
+  const generator = templates[docType];
+  if (generator) {
+    const docContent = generator();
+    downloadDocument(docContent, docType);
+    showToast('📄 Document generated successfully!', 'success');
+  } else {
+    showToast('📄 Generating ' + docType + ' template…', 'info');
+  }
+}
+
+function generateMOA() {
+  return `
+MEMORANDUM OF ASSOCIATION
+OF
+${companyProfile.name || '[COMPANY NAME]'}
+
+1. NAME OF THE COMPANY
+The name of the Company is "${companyProfile.name || '[COMPANY NAME]'}".
+
+2. REGISTERED OFFICE
+The Registered Office of the Company will be situated in the State of ${companyProfile.address?.split(',').pop()?.trim() || '[STATE]'}.
+
+3. OBJECTS
+The main objects to be pursued by the Company on its incorporation are:
+- To carry on the business of ${companyProfile.industry || '[INDUSTRY]'}
+- To engage in software development, consulting, and related services
+- To undertake any other lawful business activities
+
+4. LIABILITY
+The liability of the members is limited to the amount unpaid on shares held by them.
+
+5. CAPITAL
+The Authorized Share Capital of the Company is Rs. [AMOUNT] divided into [NUMBER] equity shares of Rs. [VALUE] each.
+
+6. SUBSCRIPTION
+We, the several persons whose names and addresses are subscribed below, are desirous of being formed into a Company in pursuance of this Memorandum of Association.
+
+Generated by NitiBot Premium on ${new Date().toLocaleDateString('en-IN')}
+CIN: ${companyProfile.cin || '[CIN NUMBER]'}
+PAN: ${companyProfile.pan || '[PAN NUMBER]'}
+
+DISCLAIMER: This is a template document. Please consult a qualified Company Secretary or legal professional before filing with MCA.
+`;
+}
+
+function generateSHA() {
+  return `
+SHAREHOLDERS AGREEMENT
+${companyProfile.name || '[COMPANY NAME]'}
+
+This Shareholders Agreement is entered into on ${new Date().toLocaleDateString('en-IN')}
+
+BETWEEN:
+${companyProfile.founders || '[FOUNDER NAMES]'}
+
+WHEREAS the Company is engaged in ${companyProfile.industry || '[BUSINESS]'}
+
+1. DEFINITIONS
+"Company" means ${companyProfile.name}
+"Shares" means equity shares of the Company
+
+2. SHAREHOLDING
+The parties hold shares in the following proportions:
+[TO BE FILLED]
+
+3. BOARD COMPOSITION
+The Board shall consist of [NUMBER] directors
+
+4. VESTING SCHEDULE
+Shares shall vest over a period of 4 years with a 1-year cliff
+
+5. DRAG-ALONG RIGHTS
+Majority shareholders may require minority shareholders to join in a sale
+
+6. TAG-ALONG RIGHTS
+Minority shareholders have the right to join in a sale on the same terms
+
+7. ANTI-DILUTION PROTECTION
+[TO BE CUSTOMIZED]
+
+8. DISPUTE RESOLUTION
+Disputes shall be resolved through arbitration in ${companyProfile.address?.split(',').pop()?.trim() || '[CITY]'}
+
+Generated by NitiBot Premium
+CIN: ${companyProfile.cin || '[CIN]'}
+
+DISCLAIMER: This is a template. Consult a legal professional before execution.
+`;
+}
+
+function generateFounderAgreement() {
+  return `
+FOUNDER AGREEMENT
+${companyProfile.name || '[COMPANY NAME]'}
+
+Date: ${new Date().toLocaleDateString('en-IN')}
+
+PARTIES:
+${companyProfile.founders || '[FOUNDER NAMES AND ROLES]'}
+
+1. ROLES AND RESPONSIBILITIES
+Each founder shall perform the duties assigned to their respective roles.
+
+2. EQUITY ALLOCATION
+Equity shall be distributed as follows:
+[TO BE FILLED BASED ON CONTRIBUTION]
+
+3. VESTING SCHEDULE
+- 4-year vesting period
+- 1-year cliff
+- Monthly vesting thereafter
+
+4. INTELLECTUAL PROPERTY ASSIGNMENT
+All IP created by founders shall be assigned to the Company.
+
+5. NON-COMPETE
+Founders agree not to compete with the Company during employment and for [PERIOD] thereafter.
+
+6. CONFIDENTIALITY
+Founders shall maintain confidentiality of Company information.
+
+7. EXIT PROVISIONS
+- Voluntary exit: Vested shares retained
+- Termination for cause: Unvested shares forfeited
+
+Company: ${companyProfile.name}
+CIN: ${companyProfile.cin || '[CIN]'}
+PAN: ${companyProfile.pan || '[PAN]'}
+
+Generated by NitiBot Premium on ${new Date().toLocaleDateString('en-IN')}
+
+DISCLAIMER: Template document. Seek legal advice before signing.
+`;
+}
+
+function generateNDA() {
+  return `
+NON-DISCLOSURE AGREEMENT (NDA)
+
+This Agreement is entered into on ${new Date().toLocaleDateString('en-IN')}
+
+BETWEEN:
+${companyProfile.name || '[COMPANY NAME]'}
+CIN: ${companyProfile.cin || '[CIN]'}
+("Disclosing Party")
+
+AND:
+[RECIPIENT NAME]
+("Receiving Party")
+
+1. CONFIDENTIAL INFORMATION
+Confidential Information includes all business, technical, and financial information disclosed by either party.
+
+2. OBLIGATIONS
+The Receiving Party shall:
+- Maintain confidentiality
+- Use information only for the agreed purpose
+- Not disclose to third parties without consent
+
+3. EXCLUSIONS
+This Agreement does not apply to information that:
+- Is publicly available
+- Was known prior to disclosure
+- Is independently developed
+
+4. TERM
+This Agreement shall remain in effect for [PERIOD] from the date of execution.
+
+5. GOVERNING LAW
+This Agreement shall be governed by the laws of India.
+
+6. JURISDICTION
+Courts of ${companyProfile.address?.split(',').pop()?.trim() || '[CITY]'} shall have exclusive jurisdiction.
+
+Company Details:
+${companyProfile.name}
+${companyProfile.address || '[ADDRESS]'}
+CIN: ${companyProfile.cin || '[CIN]'}
+
+Generated by NitiBot Premium
+
+DISCLAIMER: Template document. Consult legal counsel before use.
+`;
+}
+
+function generateEmploymentAgreement() {
+  return `
+EMPLOYMENT AGREEMENT
+
+Between: ${companyProfile.name || '[COMPANY NAME]'}
+And: [EMPLOYEE NAME]
+
+Date: ${new Date().toLocaleDateString('en-IN')}
+
+1. POSITION AND DUTIES
+Employee is appointed as [DESIGNATION] and shall perform duties as assigned.
+
+2. COMPENSATION
+- Salary: Rs. [AMOUNT] per annum
+- Benefits: [TO BE SPECIFIED]
+
+3. WORKING HOURS
+Standard working hours: [HOURS] per week
+
+4. PROBATION
+Probation period: [MONTHS] months
+
+5. INTELLECTUAL PROPERTY
+All work product created during employment belongs to the Company.
+
+6. CONFIDENTIALITY
+Employee shall maintain confidentiality of Company information.
+
+7. NON-COMPETE
+Employee agrees not to compete for [PERIOD] after termination.
+
+8. TERMINATION
+- Notice period: [DAYS] days
+- Termination for cause: Immediate
+
+9. GOVERNING LAW
+This Agreement is governed by Indian law.
+
+Company: ${companyProfile.name}
+CIN: ${companyProfile.cin || '[CIN]'}
+Address: ${companyProfile.address || '[ADDRESS]'}
+
+Generated by NitiBot Premium
+
+DISCLAIMER: Template document. Seek legal advice.
+`;
+}
+
+function generateESOPPolicy() {
+  return `
+EMPLOYEE STOCK OPTION PLAN (ESOP)
+${companyProfile.name || '[COMPANY NAME]'}
+
+Approved on: ${new Date().toLocaleDateString('en-IN')}
+
+1. PURPOSE
+To attract, retain, and motivate employees through equity participation.
+
+2. ELIGIBILITY
+Permanent employees of the Company are eligible.
+
+3. POOL SIZE
+ESOP pool: [PERCENTAGE]% of fully diluted share capital
+
+4. VESTING SCHEDULE
+- 4-year vesting period
+- 1-year cliff
+- Quarterly vesting thereafter
+
+5. EXERCISE PRICE
+Exercise price shall be determined by the Board, not less than fair market value.
+
+6. EXERCISE PERIOD
+Options must be exercised within [PERIOD] of vesting.
+
+7. TERMINATION
+- Voluntary resignation: [DAYS] days to exercise vested options
+- Termination for cause: All options forfeited
+
+8. ADMINISTRATION
+The ESOP shall be administered by the Compensation Committee.
+
+9. COMPLIANCE
+This Plan complies with Companies Act 2013 and SEBI regulations.
+
+Company: ${companyProfile.name}
+CIN: ${companyProfile.cin || '[CIN]'}
+Year of Incorporation: ${companyProfile.year || '[YEAR]'}
+
+Generated by NitiBot Premium
+
+DISCLAIMER: Template document. Consult legal and tax advisors.
+`;
+}
+
+function generatePrivacyPolicy() {
+  return `
+PRIVACY POLICY
+${companyProfile.name || '[COMPANY NAME]'}
+
+Effective Date: ${new Date().toLocaleDateString('en-IN')}
+
+This Privacy Policy is compliant with the Digital Personal Data Protection Act, 2023 (DPDP Act).
+
+1. DATA CONTROLLER
+${companyProfile.name}
+${companyProfile.address || '[ADDRESS]'}
+CIN: ${companyProfile.cin || '[CIN]'}
+
+2. DATA COLLECTION
+We collect the following personal data:
+- Name, email, phone number
+- Usage data and analytics
+- [OTHER DATA TYPES]
+
+3. PURPOSE OF PROCESSING
+Data is processed for:
+- Service delivery
+- Communication
+- Legal compliance
+
+4. DATA RETENTION
+Personal data is retained for [PERIOD] or as required by law.
+
+5. DATA SUBJECT RIGHTS
+You have the right to:
+- Access your data
+- Correct inaccurate data
+- Request deletion
+- Withdraw consent
+
+6. DATA SECURITY
+We implement appropriate technical and organizational measures to protect your data.
+
+7. DATA SHARING
+We do not sell your data. We may share data with:
+- Service providers
+- Legal authorities (when required)
+
+8. COOKIES
+We use cookies for [PURPOSE]. You can disable cookies in your browser.
+
+9. CONTACT
+For privacy concerns, contact: [EMAIL]
+
+10. UPDATES
+This policy may be updated. Check regularly for changes.
+
+Company: ${companyProfile.name}
+Generated by NitiBot Premium
+
+DISCLAIMER: Template policy. Consult legal counsel for DPDP Act compliance.
+`;
+}
+
+function generateGSTInvoice() {
+  return `
+TAX INVOICE
+(Under GST Act 2017)
+
+${companyProfile.name || '[COMPANY NAME]'}
+${companyProfile.address || '[ADDRESS]'}
+GSTIN: ${companyProfile.gst || '[GSTIN]'}
+PAN: ${companyProfile.pan || '[PAN]'}
+
+Invoice No: INV-${Date.now()}
+Date: ${new Date().toLocaleDateString('en-IN')}
+
+BILL TO:
+[CUSTOMER NAME]
+[CUSTOMER ADDRESS]
+GSTIN: [CUSTOMER GSTIN]
+
+S.No | Description | HSN/SAC | Qty | Rate | Amount
+-----|-------------|---------|-----|------|-------
+1    | [SERVICE]   | [CODE]  | 1   | Rs.  | Rs.
+-----|-------------|---------|-----|------|-------
+
+Taxable Amount:        Rs. [AMOUNT]
+CGST @ 9%:            Rs. [AMOUNT]
+SGST @ 9%:            Rs. [AMOUNT]
+Total:                Rs. [AMOUNT]
+
+Amount in Words: [AMOUNT IN WORDS]
+
+Terms & Conditions:
+1. Payment due within [DAYS] days
+2. Interest @ 18% p.a. on delayed payments
+3. Subject to ${companyProfile.address?.split(',').pop()?.trim() || '[CITY]'} jurisdiction
+
+For ${companyProfile.name}
+
+Authorized Signatory
+
+Generated by NitiBot Premium
+
+DISCLAIMER: Template invoice. Verify GST compliance before use.
+`;
+}
+
+function downloadDocument(content, docType) {
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${companyProfile.name || 'Document'}_${docType}_${Date.now()}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SEND MESSAGE — with real Flowise call
+═══════════════════════════════════════════════════════════════ */
+async function sendMsg() {
+  const ta = document.getElementById('chatInput');
+  const text = ta.value.trim();
+  if (!text || isStreaming) return;
+  isStreaming = true;
+  ta.value = '';
+  ta.style.height = 'auto';
+  chatHistory.push({ role: 'user', content: text });
+  appendUserMsg(text);
+  updateMemoryIndicator();
+  const typingRow = appendTyping();
+  updateStatus(true, 'THINKING…');
+  try {
+    const data = await callFlowise(text);
+    const answer  = data.text || data.answer || data.response || JSON.stringify(data);
+    const sources = data.sourceDocuments || [];
+    const bubble  = document.getElementById('streamBubble');
+    if (bubble) await streamText(bubble, answer);
+    finalizeBotMsg(typingRow, answer, sources);
+    chatHistory.push({ role: 'assistant', content: answer });
+    updateStatus(true, 'CONNECTED');
+  } catch (err) {
+    finalizeBotMsg(typingRow, '⚠ ' + err.message, []);
+    updateStatus(false, 'ERROR');
+  } finally {
+    isStreaming = false;
+    updateMemoryIndicator();
+    scrollBottom();
+    saveSession();
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CLEAR CHAT
+═══════════════════════════════════════════════════════════════ */
+function clearChat() {
+  if (!confirm('Are you sure you want to clear the chat history?')) return;
+  
+  chatHistory = [];
+  sessionId   = generateId();
+  localStorage.setItem('nb_session', sessionId);
+  const msgs = document.getElementById('chatMessages');
+  if (msgs) {
+    msgs.innerHTML = `
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">
+          <div class="empty-ring er1"></div>
+          <div class="empty-ring er2"></div>
+          <div class="empty-ring er3"></div>
+          <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M36 4 L62 16 L62 40 C62 56 36 68 36 68 C36 68 10 56 10 40 L10 16 Z" fill="#080b10" stroke="#c9a855" stroke-width="1.4"/>
+            <path d="M36 11 L56 21 L56 39 C56 52 36 62 36 62 C36 62 16 52 16 39 L16 21 Z" fill="none" stroke="#c9a855" stroke-width="0.6" opacity="0.35"/>
+            <line x1="22" y1="34" x2="50" y2="34" stroke="#c9a855" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="36" y1="22" x2="36" y2="54" stroke="#c9a855" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="36" cy="23" r="2.5" fill="#c9a855"/>
+            <line x1="24" y1="34" x2="22" y2="42" stroke="#c9a855" stroke-width="0.9" stroke-dasharray="2 1.5"/>
+            <path d="M17 42 Q22 47 27 42" stroke="#c9a855" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+            <line x1="48" y1="34" x2="50" y2="42" stroke="#c9a855" stroke-width="0.9" stroke-dasharray="2 1.5"/>
+            <path d="M45 42 Q50 47 55 42" stroke="#c9a855" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+            <rect x="30" y="52" width="12" height="2" rx="1" fill="#c9a855" opacity="0.6"/>
+            <circle cx="22" cy="26" r="2" fill="#4a7fb5" opacity="0.9"/>
+            <circle cx="50" cy="26" r="2" fill="#4a7fb5" opacity="0.9"/>
+            <line x1="24" y1="26" x2="34" y2="26" stroke="#4a7fb5" stroke-width="0.8" opacity="0.6"/>
+            <line x1="38" y1="26" x2="48" y2="26" stroke="#4a7fb5" stroke-width="0.8" opacity="0.6"/>
+            <circle cx="36" cy="26" r="1.4" fill="#4a7fb5" opacity="0.8"/>
+          </svg>
+        </div>
+        <div>
+          <div class="empty-title">Ask NitiBot anything about<br>Indian legal compliance</div>
+          <div class="empty-sub" style="margin-top:10px">Powered by GST Act · Companies Act · IT Act · SEBI · RBI</div>
+        </div>
+        <div class="starters">
+          <div class="starter-card" onclick="fillChat(this.querySelector('.starter-text').textContent)">
+            <div class="starter-label">📋 GST</div>
+            <div class="starter-text">What is the GST registration threshold for businesses?</div>
+          </div>
+          <div class="starter-card" onclick="fillChat(this.querySelector('.starter-text').textContent)">
+            <div class="starter-label">🏢 Companies Act</div>
+            <div class="starter-text">What are director responsibilities under Companies Act 2013?</div>
+          </div>
+          <div class="starter-card" onclick="fillChat(this.querySelector('.starter-text').textContent)">
+            <div class="starter-label">💻 IT Act</div>
+            <div class="starter-text">What are data protection obligations for businesses under IT Act?</div>
+          </div>
+          <div class="starter-card" onclick="fillChat(this.querySelector('.starter-text').textContent)">
+            <div class="starter-label">📈 SEBI</div>
+            <div class="starter-text">What are insider trading regulations under SEBI?</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  if (window.lucide) window.lucide.createIcons();
+  updateMemoryIndicator();
+  showToast('🗑 Chat cleared — new session started', 'info');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CHAT HISTORY PERSISTENCE
+═══════════════════════════════════════════════════════════════ */
+function saveSession() {
+  if (chatHistory.length === 0) return;
+  
+  let sessionIndex = allSessions.findIndex(s => s.id === sessionId);
+  let firstUserMsg = chatHistory.find(m => m.role === 'user');
+  let title = firstUserMsg ? firstUserMsg.content.substring(0, 30) : 'New Chat';
+  if (firstUserMsg && firstUserMsg.content.length > 30) title += '...';
+  
+  const currentSession = {
+    id: sessionId,
+    title: title,
+    timestamp: Date.now(),
+    messages: JSON.parse(JSON.stringify(chatHistory))
+  };
+
+  if (sessionIndex > -1) {
+    allSessions[sessionIndex] = currentSession;
+  } else {
+    allSessions.unshift(currentSession);
+  }
+  
+  localStorage.setItem('nb_all_sessions', JSON.stringify(allSessions));
+  renderHistorySidebar();
+}
+
+function renderHistorySidebar() {
+  const container = document.getElementById('historyList');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  if (allSessions.length === 0) {
+    container.innerHTML = '<div style="padding: 10px 12px; font-size: 11px; opacity: 0.5;">No recent chats</div>';
+    return;
+  }
+  
+  allSessions.forEach(session => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.innerHTML = `<i data-lucide="message-square" class="history-icon"></i><span class="history-text" title="${session.title}">${session.title}</span>`;
+    item.onclick = () => loadSession(session.id);
+    container.appendChild(item);
+  });
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function loadSession(id) {
+  const session = allSessions.find(s => s.id === id);
+  if (!session) return;
+  
+  sessionId = id;
+  localStorage.setItem('nb_session', sessionId);
+  chatHistory = JSON.parse(JSON.stringify(session.messages));
+  
+  const msgs = document.getElementById('chatMessages');
+  if (msgs) {
+    msgs.innerHTML = '';
+    chatHistory.forEach(msg => {
+      if (msg.role === 'user') {
+        appendUserMsg(msg.content);
+      } else {
+        const typingRow = appendTyping();
+        finalizeBotMsg(typingRow, msg.content, []); 
+      }
+    });
+  }
+  
+  switchTab('chat', document.getElementById('nav-new-chat'));
+  scrollBottom();
+  updateMemoryIndicator();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CONTEXT FILTER
+═══════════════════════════════════════════════════════════════ */
+function setFilter(chip) {
+  document.querySelectorAll('#contextStrip .chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  activeFilter = chip.dataset.filter || '';
+  const label = chip.textContent.trim();
+  showToast(activeFilter ? `🔍 Filtering by: ${label}` : '🔍 Showing all acts');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FILL CHAT (quick chips)
+═══════════════════════════════════════════════════════════════ */
+function fillChat(text) {
+  const ta = document.getElementById('chatInput');
+  if (ta) { ta.value = text; ta.focus(); autoResize(ta); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   KEYBOARD HANDLER
+═══════════════════════════════════════════════════════════════ */
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+}
+
+function autoResize(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 160) + 'px';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SETTINGS TOGGLES
+═══════════════════════════════════════════════════════════════ */
+function toggleSetting(el, label) {
+  const isOn = el.classList.toggle('on');
+  showToast((isOn ? '✅ ' : '🔕 ') + (label||'Setting') + (isOn ? ' enabled' : ' disabled'), isOn ? 'success' : 'info');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ONBOARDING FLOW — 5-step company profile collection
+═══════════════════════════════════════════════════════════════ */
+function openOnboarding() {
+  document.getElementById('onboardingModal').style.display = 'flex';
+  obCurrentStep = 1;
+  renderObStep();
+}
+function closeOnboarding() {
+  document.getElementById('onboardingModal').style.display = 'none';
+  if (Object.keys(companyProfile).length > 0) {
+    applyProfileToUI();
+  }
+}
+function renderObStep() {
+  for (let i=1;i<=obTotalSteps;i++) {
+    const s = document.getElementById('ob-step-'+i);
+    if (s) s.style.display = i === obCurrentStep ? 'block' : 'none';
+  }
+  document.getElementById('onboardingStep').textContent = `Step ${obCurrentStep} of ${obTotalSteps-1}`;
+  const backBtn = document.getElementById('ob-back-btn');
+  const nextBtn = document.getElementById('ob-next-btn');
+  if (backBtn) backBtn.style.display = obCurrentStep > 1 && obCurrentStep < obTotalSteps ? 'block' : 'none';
+  if (nextBtn) {
+    if (obCurrentStep === obTotalSteps) {
+      nextBtn.textContent = 'START USING NITIBOT →';
+      nextBtn.onclick = closeOnboarding;
+    } else {
+      nextBtn.textContent = 'NEXT →';
+      nextBtn.onclick = obNext;
+    }
+  }
+}
+function obNext() {
+  if (obCurrentStep === 1) {
+    companyProfile.name    = document.getElementById('ob_name')?.value || '';
+    companyProfile.type    = document.getElementById('ob_type')?.value || '';
+    companyProfile.year    = document.getElementById('ob_year')?.value || '';
+  } else if (obCurrentStep === 2) {
+    companyProfile.cin     = document.getElementById('ob_cin')?.value || '';
+    companyProfile.pan     = document.getElementById('ob_pan')?.value || '';
+    companyProfile.tan     = document.getElementById('ob_tan')?.value || '';
+  } else if (obCurrentStep === 3) {
+    companyProfile.gst     = document.getElementById('ob_gst')?.value || '';
+    companyProfile.address = document.getElementById('ob_addr')?.value || '';
+  } else if (obCurrentStep === 4) {
+    companyProfile.founders  = document.getElementById('ob_founders')?.value || '';
+    companyProfile.industry  = document.getElementById('ob_industry')?.value || '';
+    // Render summary on step 5
+    const sum = document.getElementById('ob-summary');
+    if (sum) {
+      sum.innerHTML = Object.entries(companyProfile)
+        .filter(([k,v])=>v)
+        .map(([k,v])=>`<div style="display:flex;gap:8px;margin-bottom:6px;"><span style="color:#c9a855;min-width:90px;text-transform:capitalize;">${k}:</span><span>${escapeHtml(v)}</span></div>`)
+        .join('');
+    }
+    localStorage.setItem('nb_profile', JSON.stringify(companyProfile));
+  }
+  if (obCurrentStep < obTotalSteps) { obCurrentStep++; renderObStep(); }
+}
+function obBack() {
+  if (obCurrentStep > 1) { obCurrentStep--; renderObStep(); }
+}
+function applyProfileToUI() {
+  const name = companyProfile.name || 'Your Company';
+  const initials = name.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || 'AC';
+  const av = document.getElementById('userAvatar');
+  if (av) { av.textContent = initials; av.title = name + ' — Premium'; }
+  // Update welcome banner
+  const banners = document.querySelectorAll('.wb-text h3');
+  banners.forEach(b => b.textContent = 'Welcome back, ' + name);
+  showToast('👑 Profile loaded: ' + name, 'success');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PREMIUM GATE
+═══════════════════════════════════════════════════════════════ */
+function showPremiumGate() {
+  document.getElementById('premiumGateModal').style.display = 'flex';
+}
+function closePremiumGate() {
+  document.getElementById('premiumGateModal').style.display = 'none';
+  showToast('👑 Upgrade anytime via Settings → Account', 'info');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════ */
+// Update status on load
+updateStatus(!!config.chatflowId, config.chatflowId ? 'CONNECTED' : 'NOT CONFIGURED');
+updateMemoryIndicator();
+
+// Apply saved profile
+if (Object.keys(companyProfile).length > 0) {
+  applyProfileToUI();
+} else {
+  // First-time user: show onboarding after 2s
+  setTimeout(() => {
+    if (!localStorage.getItem('nb_ob_done')) openOnboarding();
+  }, 2000);
+}
+
+// Auto-open config if no chatflow set
+if (!config.chatflowId) {
+  setTimeout(openConfig, 2500);
+}
+
+// Focus textarea
+const chatInputEl = document.getElementById('chatInput');
+if (chatInputEl) chatInputEl.focus();
+
+// Animate stat counters on dashboard tab open
+setTimeout(() => {
+  const statVals = document.querySelectorAll('#panel-dashboard .stat-val');
+  const targets  = [78, 34, 9, 3];
+  statVals.forEach((el, i) => {
+    if (targets[i] !== undefined) animateCounter(el, targets[i]);
+  });
+  animateRing(78);
+}, 500);
+
+// Render saved docs count on load
+renderSavedDocs();
+// Render calendar on first load (if panel visible)
+renderCalendar();
+// Render any existing tickets
+renderTickets();
+// Render custom alerts
+renderCustomAlerts();
+
+// Add blink keyframe if not present
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  @keyframes toastIn { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .typing-dots span { animation: blink 1.2s infinite; }
+  .typing-dots span:nth-child(2) { animation-delay:.2s; }
+  .typing-dots span:nth-child(3) { animation-delay:.4s; }
+`;
+document.head.appendChild(style);
+
+
+/* ══════════════════════════════════════════════════════════════
+   COPY MESSAGE — real clipboard API
+═══════════════════════════════════════════════════════════════ */
+async function copyMsg(btn) {
+  const msgRow = btn.closest('.msg-row');
+  const bubble = msgRow ? msgRow.querySelector('.msg-bubble') : null;
+  const text = bubble ? (bubble.innerText || bubble.textContent) : '';
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('📋 Copied to clipboard!', 'success');
+    btn.textContent = '✅ Copied';
+    setTimeout(() => btn.textContent = '📋 Copy', 2000);
+  } catch(e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('📋 Copied!', 'success');
+  }
+}
+/* ══════════════════════════════════════════════════════════════
+   VOICE INPUT — Web Speech API
+═══════════════════════════════════════════════════════════════ */
+let recognition = null;
+let isListening = false;
+function toggleVoice() {
+  const btn = document.getElementById('voiceBtn');
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    showToast('🎙️ Voice input not supported in this browser. Try Chrome.', 'error');
+    return;
+  }
+  if (isListening) {
+    recognition && recognition.stop();
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'en-IN';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.onstart = () => {
+    isListening = true;
+    btn.textContent = '🔴';
+    btn.title = 'Listening… click to stop';
+    showToast('🎙️ Listening… Speak your legal query', 'info');
+  };
+  recognition.onresult = (e) => {
+    const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+    const ta = document.getElementById('chatInput');
+    if (ta) { ta.value = transcript; autoResize(ta); }
+  };
+  recognition.onend = () => {
+    isListening = false;
+    btn.textContent = '🎙️';
+    btn.title = 'Voice input';
+    showToast('✅ Voice captured — press Send or edit', 'success');
+  };
+  recognition.onerror = (e) => {
+    isListening = false;
+    btn.textContent = '🎙️';
+    showToast('⚠️ Voice error: ' + e.error, 'error');
+  };
+  recognition.start();
+}
+/* ══════════════════════════════════════════════════════════════
+   FILE UPLOAD HANDLER — chat input attachment
+═══════════════════════════════════════════════════════════════ */
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const ta = document.getElementById('chatInput');
+  if (ta) {
+    ta.value = `[Attached: ${file.name}] Please analyse this document for compliance with Indian law.`;
+    autoResize(ta);
+  }
+  showToast(`📎 ${file.name} attached — click Send to analyse`, 'info');
+  event.target.value = '';
+}
+/* ══════════════════════════════════════════════════════════════
+   DOCUMENT ANALYSIS — upload zone (Documents tab)
+═══════════════════════════════════════════════════════════════ */
+function handleDocDrop(event) {
+  event.preventDefault();
+  document.getElementById('uploadZone').style.borderColor = '';
+  const file = event.dataTransfer.files[0];
+  if (file) processDocumentFile(file);
+}
+function handleDocAnalysis(event) {
+  const file = event.target.files[0];
+  if (file) processDocumentFile(file);
+  event.target.value = '';
+}
+function processDocumentFile(file) {
+  const status = document.getElementById('uploadStatus');
+  status.style.display = 'block';
+  status.textContent = `📄 Processing: ${file.name}…`;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const content = e.target.result;
+    const preview = typeof content === 'string' ? content.slice(0, 500) : '[Binary file — PDF parser required]';
+    status.textContent = `✅ ${file.name} loaded (${(file.size/1024).toFixed(1)} KB)`;
+    // Auto-fill chat with analysis request
+    const ta = document.getElementById('chatInput');
+    if (ta) {
+      ta.value = `I have uploaded a document titled "${file.name}". Here is an excerpt: "${preview.replace(/\n/g,' ').slice(0,300)}…" Please analyse this for compliance with Indian law and identify any red flags.`;
+      autoResize(ta);
+    }
+    switchTab('chat', document.getElementById('tab-chat'));
+    showToast(`📄 ${file.name} ready — click Send in Chat to analyse`, 'success');
+  };
+  reader.onerror = () => { status.textContent = '❌ Failed to read file'; };
+  if (file.type === 'application/pdf') {
+    reader.readAsArrayBuffer(file);
+  } else {
+    reader.readAsText(file);
+  }
+}
+/* ══════════════════════════════════════════════════════════════
+   SAVED DOCUMENTS — display in Documents tab
+═══════════════════════════════════════════════════════════════ */
+function renderSavedDocs() {
+  const list = document.getElementById('savedDocsList');
+  const count = document.getElementById('savedCount');
+  if (!list) return;
+  if (count) count.textContent = savedResponses.length;
+  if (savedResponses.length === 0) {
+    list.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:10px;">No saved responses yet. Click 💾 Save on any chat response to save it here.</div>';
+    return;
+  }
+  list.innerHTML = savedResponses.map((r, i) => `
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;display:flex;align-items:flex-start;gap:10px;">
+      <div style="font-size:18px;"><i data-lucide="file-text" style="width:18px;height:18px;color:var(--gold);"></i></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11px;color:var(--gold);margin-bottom:4px;">${r.date} · Saved Response</div>
+        <div style="font-size:12px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(r.content.slice(0,120))}…</div>
+      </div>
+      <button onclick="deleteSaved(${i})" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;flex-shrink:0;" title="Delete"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+    </div>`).join('');
+  if (window.lucide) window.lucide.createIcons();
+}
+function deleteSaved(index) {
+  savedResponses.splice(index, 1);
+  localStorage.setItem('nb_saved_responses', JSON.stringify(savedResponses));
+  renderSavedDocs();
+  showToast('🗑 Response deleted', 'info');
+}
+/* ══════════════════════════════════════════════════════════════
+   COMPLIANCE CALENDAR
+═══════════════════════════════════════════════════════════════ */
+const complianceDeadlines = [
+  { day: 20, month: 4, year: 2026, label: 'GSTR-3B Filing', type: 'urgent' },
+  { day: 31, month: 4, year: 2026, label: 'TDS Return Q4', type: 'urgent' },
+  { day: 30, month: 9, year: 2026, label: 'AOC-4 Annual Accounts', type: 'soon' },
+  { day: 30, month: 10, year: 2026, label: 'MGT-7 Annual Return', type: 'soon' },
+  { day: 15, month: 5, year: 2026, label: 'GSTR-1 Filing', type: 'soon' },
+  { day: 7,  month: 5, year: 2026, label: 'TDS Deposit', type: 'urgent' },
+  { day: 1,  month: 0, year: 2027, label: 'DPIIT Renewal', type: 'ok' },
+];
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function renderCalendar() {
+  const title = document.getElementById('calMonthTitle');
+  const grid  = document.getElementById('calGrid');
+  const dlList = document.getElementById('calDeadlineList');
+  if (!title || !grid) return;
+  title.textContent = MONTHS[calMonth] + ' ' + calYear;
+  // Day headers
+  let html = DAYS.map(d => `<div class="cal-day-header">${d}</div>`).join('');
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const daysInPrev  = new Date(calYear, calMonth,   0).getDate();
+  const today = new Date();
+  // Previous month fill
+  for (let i = firstDay-1; i >= 0; i--) {
+    html += `<div class="cal-day other-month"><div class="cal-day-num">${daysInPrev-i}</div></div>`;
+  }
+  // Current month days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
+    const dayEvents = complianceDeadlines.filter(dl => dl.day === d && dl.month === calMonth && dl.year === calYear);
+    const evHtml = dayEvents.map(e => `<div class="cal-event ${e.type}">${e.label.split(' ')[0]}</div>`).join('');
+    html += `<div class="cal-day${isToday ? ' today' : ''}" title="${dayEvents.map(e=>e.label).join(', ') || ''}">
+      <div class="cal-day-num">${d}</div>${evHtml}</div>`;
+  }
+  grid.innerHTML = html;
+  // Deadline list
+  if (dlList) {
+    const monthDl = complianceDeadlines.filter(dl => dl.month === calMonth && dl.year === calYear);
+    if (monthDl.length === 0) {
+      dlList.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:10px 0;">No deadlines this month.</div>';
+    } else {
+      dlList.innerHTML = monthDl.map(dl => `
+        <div class="dl-item">
+          <div class="dl-dot ${dl.type}"></div>
+          <span class="dl-name">${dl.label}</span>
+          <span class="dl-date">${dl.day} ${MONTHS[dl.month]} ${dl.year}</span>
+          <button onclick="fillChat('Tell me about ${dl.label} compliance requirements');switchTab('chat',document.getElementById('tab-chat'))"
+            style="font-size:10px;background:transparent;border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--text-muted);cursor:pointer;">Ask AI</button>
+        </div>`).join('');
+    }
+  }
+}
+function calPrevMonth() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
+function calNextMonth() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
+/* ══════════════════════════════════════════════════════════════
+   SMART ALERTS — custom alert management
+═══════════════════════════════════════════════════════════════ */
+let customAlerts = JSON.parse(localStorage.getItem('nb_custom_alerts') || '[]');
+function addCustomAlert() {
+  const name = document.getElementById('alertName')?.value.trim();
+  const date = document.getElementById('alertDate')?.value;
+  if (!name || !date) { showToast('⚠️ Enter alert name and date', 'error'); return; }
+  customAlerts.unshift({ id: generateId(), name, date, created: new Date().toISOString() });
+  localStorage.setItem('nb_custom_alerts', JSON.stringify(customAlerts));
+  document.getElementById('alertName').value = '';
+  document.getElementById('alertDate').value = '';
+  renderCustomAlerts();
+  showToast('✅ Alert added: ' + name, 'success');
+}
+function removeAlert(id) {
+  customAlerts = customAlerts.filter(a => a.id !== id);
+  localStorage.setItem('nb_custom_alerts', JSON.stringify(customAlerts));
+  renderCustomAlerts();
+  showToast('🗑 Alert removed', 'info');
+}
+function renderCustomAlerts() {
+  const list = document.getElementById('customAlertsList');
+  if (!list) return;
+  list.innerHTML = customAlerts.map(a => `
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:11px 14px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:14px;"><i data-lucide="bell" style="width:14px;height:14px;color:var(--gold);"></i></span>
+      <div style="flex:1;"><div style="font-size:13px;color:var(--text-primary);">${escapeHtml(a.name)}</div>
+        <div style="font-size:10.5px;color:var(--text-muted);">Due: ${new Date(a.date).toLocaleDateString('en-IN')}</div></div>
+      <button onclick="removeAlert('${a.id}')" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+    </div>`).join('');
+  if (window.lucide) window.lucide.createIcons();
+}
+/* ══════════════════════════════════════════════════════════════
+   SUPPORT TICKET SYSTEM
+═══════════════════════════════════════════════════════════════ */
+let tickets = JSON.parse(localStorage.getItem('nb_tickets') || '[]');
+function submitTicket() {
+  const cat  = document.getElementById('ticketCategory')?.value;
+  const subj = document.getElementById('ticketSubject')?.value.trim();
+  const desc = document.getElementById('ticketDesc')?.value.trim();
+  if (!cat || !subj || !desc) { showToast('⚠️ Fill all ticket fields', 'error'); return; }
+  const ticket = { id: 'TKT-' + Math.floor(Math.random()*90000+10000), cat, subj, desc,
+    status: 'Open', created: new Date().toLocaleString('en-IN') };
+  tickets.unshift(ticket);
+  localStorage.setItem('nb_tickets', JSON.stringify(tickets));
+  document.getElementById('ticketCategory').value = '';
+  document.getElementById('ticketSubject').value  = '';
+  document.getElementById('ticketDesc').value     = '';
+  renderTickets();
+  showToast(`🎫 Ticket ${ticket.id} submitted! We'll respond within 2 hours.`, 'success');
+}
+function renderTickets() {
+  const hist = document.getElementById('ticketHistory');
+  if (!hist || tickets.length === 0) return;
+  hist.innerHTML = `<div class="section-title" style="margin-bottom:10px;">🎫 Your Tickets</div>` +
+    tickets.map(t => `
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+          <span style="font-size:11px;color:var(--gold);font-weight:700;">${t.id}</span>
+          <span style="flex:1;font-size:12px;color:var(--text-primary);">${escapeHtml(t.subj)}</span>
+          <span style="font-size:10px;background:rgba(34,197,94,0.15);color:var(--green);padding:2px 8px;border-radius:5px;">${t.status}</span>
+        </div>
+        <div style="font-size:10.5px;color:var(--text-muted);">${t.cat} · ${t.created}</div>
+      </div>`).join('');
+}
+/* ══════════════════════════════════════════════════════════════
+   SETTINGS HELPERS
+═══════════════════════════════════════════════════════════════ */
+function exportAuditLog() {
+  const log = [
+    { time: new Date().toISOString(), action: 'Audit log exported', type: 'EXPORT' },
+    { time: new Date(Date.now()-3600000).toISOString(), action: 'AI query — GST registration', type: 'QUERY' },
+    { time: new Date(Date.now()-86400000).toISOString(), action: 'Company profile updated', type: 'EDIT' },
+    { time: new Date(Date.now()-172800000).toISOString(), action: 'MOA document generated', type: 'DOC' },
+  ];
+  const blob = new Blob([JSON.stringify(log, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `NitiBot_AuditLog_${Date.now()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('📜 Audit log exported as JSON', 'success');
+}
+function exportAllData() {
+  const data = {
+    profile: companyProfile,
+    savedResponses,
+    customAlerts,
+    tickets,
+    chatHistory,
+    exportedAt: new Date().toISOString(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `NitiBot_AllData_${Date.now()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('📥 All data exported as JSON', 'success');
+}
+function copyApiKey() {
+  const key = 'nb_live_' + Array(24).fill(0).map(()=>Math.floor(Math.random()*36).toString(36)).join('') + '4f2a';
+  navigator.clipboard.writeText(key).then(() => showToast('🔑 API key copied!', 'success'))
+    .catch(() => showToast('🔑 API key: ' + key, 'info'));
+}
+/* ══════════════════════════════════════════════════════════════
+   FIELD VALIDATION (CIN / PAN / GST)
+═══════════════════════════════════════════════════════════════ */
+const patterns = {
+  cin: /^[UL]\d{5}[A-Z]{2}\d{4}[A-Z]{3}\d{6}$/,
+  pan: /^[A-Z]{5}[0-9]{4}[A-Z]$/,
+  gst: /^\d{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+};
+function validateField(el, type) {
+  const val = el.value.toUpperCase();
+  el.value = val;
+  const ok = patterns[type] ? patterns[type].test(val) : true;
+  el.style.borderColor = val.length === 0 ? '' : (ok ? 'var(--green)' : 'var(--red)');
+  el.title = ok || val.length === 0 ? '' :
+    (type==='cin' ? 'Format: U72900KA2021PTC123456' :
+     type==='pan' ? 'Format: AABCT1234E' :
+     'Format: 29AABCT1234E1Z5');
+}
+/* ══════════════════════════════════════════════════════════════
+   MOBILE SIDEBAR TOGGLE
+═══════════════════════════════════════════════════════════════ */
+function toggleSidebar() {
+  const sb = document.querySelector('.sidebar');
+  const ov = document.getElementById('sidebarOverlay');
+  sb.classList.toggle('open');
+  ov.classList.toggle('show');
+}
+function closeSidebar() {
+  document.querySelector('.sidebar')?.classList.remove('open');
+  document.getElementById('sidebarOverlay')?.classList.remove('show');
+}
+/* ══════════════════════════════════════════════════════════════
+   ANIMATED STAT COUNTERS
+═══════════════════════════════════════════════════════════════ */
+function animateCounter(el, target, duration=1200) {
+  let start = 0;
+  const step = target / (duration / 16);
+  const timer = setInterval(() => {
+    start = Math.min(start + step, target);
+    el.textContent = (target % 1 === 0) ? Math.floor(start) : Math.floor(start) + '%';
+    if (start >= target) clearInterval(timer);
+  }, 16);
+}
+function animateRing(pct=78) {
+  const ring = document.querySelector('.ring');
+  if (!ring) return;
+  let cur = 0;
+  const step = pct / 60;
+  const t = setInterval(() => {
+    cur = Math.min(cur + step, pct);
+    ring.style.background = `conic-gradient(var(--gold) 0% ${cur}%, rgba(201,168,85,0.12) ${cur}% 100%)`;
+    if (cur >= pct) clearInterval(t);
+  }, 16);
+}
+/* ══════════════════════════════════════════════════════════════
+   PATCH: switchTab() to also close sidebar on mobile + run renders
+═══════════════════════════════════════════════════════════════ */
+const _origSwitchTab = switchTab;
+switchTab = function(name, clicked) {
+  _origSwitchTab(name, clicked);
+  closeSidebar();
+  document.title = 'NitiBot Premium — ' + (name.charAt(0).toUpperCase() + name.slice(1));
+
+  // Hide PRO tag permanently once the section is clicked
+  if (clicked) {
+    const proTag = clicked.querySelector('.prem-tag');
+    if (proTag && !localStorage.getItem('nb_pro_clicked_' + name)) {
+      proTag.style.display = 'none';
+      localStorage.setItem('nb_pro_clicked_' + name, '1');
+    }
+  }
+
+  if (name === 'calendar') { setTimeout(renderCalendar, 50); }
+  if (name === 'alerts')   { setTimeout(renderCustomAlerts, 50); }
+  if (name === 'support')  { setTimeout(renderTickets, 50); }
+  if (name === 'documents'){ setTimeout(renderSavedDocs, 50); }
+  if (name === 'dashboard'){ setTimeout(() => { animateRing(78); }, 100); }
+};
+
+// Hide already-clicked PRO tags on page load
+document.querySelectorAll('.nav-item').forEach(item => {
+  const onclickAttr = item.getAttribute('onclick');
+  if (onclickAttr) {
+    const match = onclickAttr.match(/switchTab\('([^']+)'/);
+    if (match && localStorage.getItem('nb_pro_clicked_' + match[1])) {
+      const proTag = item.querySelector('.prem-tag');
+      if (proTag) proTag.style.display = 'none';
+    }
+  }
+});
+
+
+/* ══════════════════════════════════════════════════════════════
+   KEYBOARD SHORTCUTS GLOBAL
+═══════════════════════════════════════════════════════════════ */
+document.addEventListener('keydown', function(e) {
+  const tag = document.activeElement.tagName.toLowerCase();
+  const inInput = tag === 'input' || tag === 'textarea' || tag === 'select';
+  // ? → shortcuts modal
+  if (e.key === '?' && !inInput) {
+    e.preventDefault();
+    const m = document.getElementById('shortcutsModal');
+    m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+  }
+  // / → focus chat
+  if (e.key === '/' && !inInput) {
+    e.preventDefault();
+    const ta = document.getElementById('chatInput');
+    if (ta) { switchTab('chat', document.getElementById('tab-chat')); ta.focus(); }
+  }
+  // Ctrl+1/2/3 → tab shortcuts
+  if (e.ctrlKey && e.key === '1') { e.preventDefault(); switchTab('chat', document.getElementById('tab-chat')); }
+  if (e.ctrlKey && e.key === '2') { e.preventDefault(); switchTab('dashboard', document.getElementById('tab-dashboard')); }
+  if (e.ctrlKey && e.key === '3') { e.preventDefault(); switchTab('documents', document.getElementById('tab-documents')); }
+  // Escape → close modals
+  if (e.key === 'Escape') {
+    document.getElementById('shortcutsModal').style.display = 'none';
+    closeConfig(); closeOnboarding();
+    document.getElementById('premiumGateModal').style.display = 'none';
+  }
+});
+
+// Mark onboarding done when closed
+document.getElementById('onboardingModal').addEventListener('click', function(e){
+  if(e.target===this) { localStorage.setItem('nb_ob_done','1'); closeOnboarding(); }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   SETTINGS — OPTIMIZED JS
+══════════════════════════════════════════════════════════════ */
+function toggleBlock(titleEl) {
+  const block = titleEl.closest('.settings-block');
+  block.classList.toggle('collapsed');
+}
+
+function filterSettings(query) {
+  const q = query.toLowerCase();
+  document.querySelectorAll('.settings-block').forEach(block => {
+    if (block.id === 's-sub-card') return;
+    const text = block.textContent.toLowerCase();
+    block.style.display = text.includes(q) ? '' : 'none';
+  });
+  document.getElementById('s-sub-card') && (
+    document.getElementById('s-sub-card').style.display = ''
+  );
+}
+
+function saveCfgFromSettings() {
+  const url  = document.getElementById('cfgUrl2')?.value.trim();
+  const id   = document.getElementById('cfgId2')?.value.trim();
+  const key  = document.getElementById('cfgKey2')?.value.trim();
+  const user = document.getElementById('cfgUser2')?.value.trim();
+  if (url)  { flowiseUrl = url;  localStorage.setItem('flowiseUrl', url); }
+  if (id)   { flowiseId  = id;   localStorage.setItem('flowiseId',  id);  }
+  if (key)  { flowiseKey = key;  localStorage.setItem('flowiseKey', key); }
+  if (user) { localStorage.setItem('flowiseUser', user); }
+  showToast('💾 Integration settings saved', 'success');
+  syncSettingsInputs();
+}
+
+function syncSettingsInputs() {
+  const el = (id) => document.getElementById(id);
+  if (el('cfgUrl2'))  el('cfgUrl2').value  = flowiseUrl  || '';
+  if (el('cfgId2'))   el('cfgId2').value   = flowiseId   || '';
+  if (el('cfgKey2'))  el('cfgKey2').value  = flowiseKey  || '';
+  if (el('cfgUser2')) el('cfgUser2').value = localStorage.getItem('flowiseUser') || '';
+  const configured = !!(flowiseUrl && flowiseId);
+  const dot = document.getElementById('cfgDot2');
+  const status = document.getElementById('cfgStatus2');
+  if (dot && status) {
+    dot.className = 'cfg-dot ' + (configured ? 'connected' : '');
+    status.textContent = configured ? 'CONFIGURED' : 'NOT CONFIGURED';
+  }
+}
+
+async function testFlowiseFromSettings() {
+  saveCfgFromSettings();
+  const dot = document.getElementById('cfgDotFull');
+  const txt = document.getElementById('cfgStatusTxt');
+  if (!flowiseUrl || !flowiseId) {
+    showToast('⚠️ Please fill in URL and Chatflow ID first', 'error');
+    return;
+  }
+  if (dot) dot.className = 'cfg-dot';
+  if (txt) txt.textContent = 'Testing…';
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (flowiseKey) headers['Authorization'] = 'Bearer ' + flowiseKey;
+    const res = await fetch(`${flowiseUrl}/api/v1/prediction/${flowiseId}`,
+      { method: 'POST', headers, body: JSON.stringify({ question: 'ping' }), signal: AbortSignal.timeout(8000) });
+    if (res.ok) {
+      if (dot) { dot.className = 'cfg-dot connected'; }
+      if (txt) txt.textContent = 'CONNECTED ✓';
+      showToast('✅ Flowise connected!', 'success');
+    } else {
+      throw new Error('HTTP ' + res.status);
+    }
+  } catch(e) {
+    if (dot) dot.className = 'cfg-dot error';
+    if (txt) txt.textContent = 'ERROR: ' + e.message;
+    showToast('❌ Connection failed: ' + e.message, 'error');
+  }
+}
+
+function regenApiKey() {
+  if (!confirm('Regenerate API key? The current key will stop working immediately.')) return;
+  const newKey = 'nb_live_' + Array(24).fill(0).map(()=>Math.floor(Math.random()*36).toString(36)).join('') + '4f2a';
+  navigator.clipboard.writeText(newKey).then(() =>
+    showToast('🔑 New key generated & copied!', 'success')
+  ).catch(() =>
+    showToast('🔑 New key: ' + newKey, 'info')
+  );
+}
+
+// Sync settings inputs on panel open
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(syncSettingsInputs, 300);
+  renderHistorySidebar();
+});
+
+</script>
+
+<!-- ══════════════════════════════════════════════════
+     CONFIG OVERLAY — Flowise Connection Settings
+══════════════════════════════════════════════════ -->
+<div id="configOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9000;display:none;align-items:center;justify-content:center;">
+  <div style="background:#0d1117;border:1px solid rgba(201,168,85,0.3);border-radius:14px;padding:32px;width:min(480px,92vw);position:relative;box-shadow:0 0 40px rgba(201,168,85,0.15);">
+    <button onclick="closeConfig()" style="position:absolute;top:14px;right:16px;background:transparent;border:none;color:#8a7a55;font-size:18px;cursor:pointer;">✕</button>
+    <div style="font-size:18px;font-weight:700;color:#c9a855;margin-bottom:6px;">⚙ Flowise Connection</div>
+    <div style="font-size:12px;color:#6a5f45;margin-bottom:22px;">Connect NitiBot Premium to your running Flowise instance. Use the Premium Chatflow ID from your Flowise dashboard.</div>
+
+    <div style="margin-bottom:14px;">
+      <label style="font-size:11px;color:#8a7a55;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Flowise Base URL</label>
+      <input id="flowiseUrl" type="text" value="http://localhost:3000" placeholder="http://localhost:3000"
+        style="width:100%;box-sizing:border-box;background:#080b10;border:1px solid rgba(201,168,85,0.2);border-radius:8px;padding:10px 14px;color:#e0d5bb;font-size:13px;outline:none;">
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:11px;color:#8a7a55;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Chatflow ID (Premium)</label>
+      <input id="chatflowId" type="text" placeholder="your-premium-chatflow-uuid"
+        style="width:100%;box-sizing:border-box;background:#080b10;border:1px solid rgba(201,168,85,0.2);border-radius:8px;padding:10px 14px;color:#e0d5bb;font-size:13px;outline:none;">
+    </div>
+    <div style="margin-bottom:20px;">
+      <label style="font-size:11px;color:#8a7a55;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">API Key <span style="color:#4a4030;">(optional)</span></label>
+      <input id="cfApiKey" type="password" placeholder="Leave blank if auth is disabled"
+        style="width:100%;box-sizing:border-box;background:#080b10;border:1px solid rgba(201,168,85,0.2);border-radius:8px;padding:10px 14px;color:#e0d5bb;font-size:13px;outline:none;">
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:11px;color:#8a7a55;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">User ID <span style="color:#4a4030;">(for premium gate check)</span></label>
+      <input id="cfUserId" type="text" placeholder="e.g. sujalmahato709"
+        style="width:100%;box-sizing:border-box;background:#080b10;border:1px solid rgba(201,168,85,0.2);border-radius:8px;padding:10px 14px;color:#e0d5bb;font-size:13px;outline:none;">
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="saveConfig()" style="flex:1;background:linear-gradient(135deg,#c9a855,#a07830);border:none;border-radius:8px;padding:12px;color:#080b10;font-weight:700;font-size:13px;cursor:pointer;letter-spacing:1px;">SAVE &amp; CONNECT</button>
+      <button id="testBtn" onclick="testConnection()" style="background:transparent;border:1px solid rgba(201,168,85,0.3);border-radius:8px;padding:12px 16px;color:#c9a855;font-size:13px;cursor:pointer;">TEST</button>
+    </div>
+    <div id="configStatus" style="margin-top:14px;padding:10px 14px;background:rgba(74,127,181,0.06);border:1px solid rgba(74,127,181,0.15);border-radius:8px;font-size:12px;color:#7a9fc0;display:none;"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     COMPANY ONBOARDING MODAL — 10-field profile collection
+══════════════════════════════════════════════════ -->
+<div id="onboardingModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:9100;align-items:center;justify-content:center;">
+  <div style="background:#0d1117;border:1px solid rgba(201,168,85,0.35);border-radius:16px;padding:36px;width:min(520px,94vw);position:relative;max-height:90vh;overflow-y:auto;box-shadow:0 0 60px rgba(201,168,85,0.2);">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="font-size:36px;margin-bottom:8px;">👑</div>
+      <div style="font-size:20px;font-weight:700;color:#c9a855;">Welcome to NitiBot Premium</div>
+      <div style="font-size:12px;color:#6a5f45;margin-top:6px;">Let's set up your company profile to personalize your experience</div>
+    </div>
+    <div id="onboardingStep" style="font-size:12px;color:#c9a855;text-align:right;margin-bottom:16px;">Step 1 of 5</div>
+    <!-- Step 1: Basic Info -->
+    <div id="ob-step-1" class="ob-step">
+      <div style="font-size:14px;color:#e0d5bb;font-weight:600;margin-bottom:16px;">🏢 Basic Company Info</div>
+      <div style="margin-bottom:12px;"><label style="font-size:11px;color:#8a7a55;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;">Legal Company Name</label><input id="ob_name" type="text" placeholder="e.g. Acme Technologies Pvt Ltd" style="width:100%;box-sizing:border-box;background:#080b10;border:1px solid rgba(201,168,85,0.2);border-radius:7px;padding:9px 12px;color:#e0d5bb;font-size:13px;outline:none;"></div>
+      <div style="margin-bottom:12px;"><label style="font-size:11px;color:#8a7a55;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;">Business Type</label>
+        <select id="ob_type" style="width:100%;background:#080b10;border:1px solid rgba(201,168,85,0.2);border-radius:7px;padding:9px 12px;color:#e0d5bb;font-size:13px;outline:none;">
+          <option value="">Select type…</option><option>Private Limited (Pvt Ltd)</option><option>LLP</option><option>Partnership</option><option>Sole Proprietor</option><option>OPC</option>
+        </select>
+      </div>
+      <div style="margin-bottom:12px;"><label style="font-size:11px;color:#8a7a55;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;">Year of Incorporation</label><input id="ob_year" type="text" placeholder="e.g. 2021" style="width:100%;box-sizing:border-box;background:#080b10;border:1px solid rgba(201,168,85,0.2);border-radius:7px;padding:9px 12px;color:#e0d5bb;font-size:13px;outline:none;"></div>
+    </div>
+    <!-- Step 2: Registration Numbers -->
+    <div id="ob-step-2" class="ob-step" style="display:none;">
+      <div style="font-size:14px;color:#e0d5bb;font-weight:600;margin-bottom:16px;">📋 Registration Numbers</div>
+      <div style="margin-bottom:12px;"><label style="font-size:11px;color:#8a7a55;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;">CIN Number</label><input id="ob_cin" type="text" placeholder="e.g. U72900KA2021PTC123456" oninput="validateField(this,'cin')" style="width:100%;box-sizing:border-box;background:#080b10;border:1px solid rgba(201,168,85,0.2);border-radius:7px;padding:9px 12px;color:#e0d5bb;font-size:13px;outline:none;"></div>
+      <div style="margin-bottom:12px;"><label style="font-size:11px;color:#8a7a55;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;">PAN Number</label><input id="ob_pan" type="text" placeholder="e.g. AABCT1234E" oninput="validateField(this,'pan')" style="width:100%;box-sizing:border-box;background:#080b10;border:1px solid rgba(201,168,85,0.2);border-radius:7px;padding:9px 12px;color:#e0d5bb;font-size:13px;outline:none;"></div>
+      <div style="margin-bottom:12px;"><label style="font-size:11px;color:#8a7a55;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;">TAN Number</label><input id="ob_tan" type="text" placeholder="e.g. BLRE12345B" style="width:100%;box-sizing:border-box;background:#080b10;border:1px solid rgba(201,168,85,0.2);border-radius:7px;padding:9px 12px;color:#e0d5bb;font-size:13px;outline:none;"></div>
+    </div>
+    <!-- Step 3: GST & Address -->
+    <div id="ob-step-3" class="ob-step" style="display:none;">
+      <div style="font-size:14px;color:#e0d5bb;font-weight:600;margin-bottom:16px;">🧾 Tax & Address</div>
+      <div style="margin-bottom:12px;"><label style="font-size:11px;color:#8a7a55;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;">GST Number</label><input id="ob_gst" type="text" placeholder="e.g. 29AABCT1234E1Z5" oninput="validateField(this,'gst')" style="width:100%;box-sizing:border-box;background:#080b10;border:1px solid rgba(201,168,85,0.2);border-radius:7px;padding:9px 12px;color:#e0d5bb;font-size:13px;outline:none;"></div>
+      <div style="margin-bottom:12px;"><label style="font-size:11px;color:#8a7a55;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;">Registered Address</label><textarea id="ob_addr" rows="3" placeholder="Full registered office address" style="width:100%;box-sizing:border-box;background:#080b10;border:1px solid rgba(201,168,85,0.2);border-radius:7px;padding:9px 12px;color:#e0d5bb;font-size:13px;outline:none;resize:none;"></textarea></div>
+    </div>
+    <!-- Step 4: Founders & Industry -->
+    <div id="ob-step-4" class="ob-step" style="display:none;">
+      <div style="font-size:14px;color:#e0d5bb;font-weight:600;margin-bottom:16px;">👥 Founders & Industry</div>
+      <div style="margin-bottom:12px;"><label style="font-size:11px;color:#8a7a55;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;">Founders (names & roles)</label><textarea id="ob_founders" rows="3" placeholder="e.g. Rahul Sharma (CEO), Priya Patel (CTO)" style="width:100%;box-sizing:border-box;background:#080b10;border:1px solid rgba(201,168,85,0.2);border-radius:7px;padding:9px 12px;color:#e0d5bb;font-size:13px;outline:none;resize:none;"></textarea></div>
+      <div style="margin-bottom:12px;"><label style="font-size:11px;color:#8a7a55;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px;">Industry / Sector</label><input id="ob_industry" type="text" placeholder="e.g. FinTech, HealthTech, SaaS" style="width:100%;box-sizing:border-box;background:#080b10;border:1px solid rgba(201,168,85,0.2);border-radius:7px;padding:9px 12px;color:#e0d5bb;font-size:13px;outline:none;"></div>
+    </div>
+    <!-- Step 5: Complete -->
+    <div id="ob-step-5" class="ob-step" style="display:none;text-align:center;">
+      <div style="font-size:48px;margin-bottom:12px;">🎉</div>
+      <div style="font-size:18px;font-weight:700;color:#c9a855;margin-bottom:8px;">Profile Complete!</div>
+      <div style="font-size:13px;color:#8a7a55;margin-bottom:20px;">Your company profile has been saved. NitiBot will now provide personalized compliance guidance.</div>
+      <div id="ob-summary" style="background:rgba(201,168,85,0.06);border:1px solid rgba(201,168,85,0.15);border-radius:10px;padding:16px;text-align:left;font-size:12px;color:#8a7a55;margin-bottom:20px;"></div>
+    </div>
+    <!-- Navigation buttons -->
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button id="ob-back-btn" onclick="obBack()" style="flex:0 0 auto;background:transparent;border:1px solid rgba(201,168,85,0.25);border-radius:8px;padding:10px 18px;color:#8a7a55;font-size:13px;cursor:pointer;display:none;">← Back</button>
+      <button id="ob-next-btn" onclick="obNext()" style="flex:1;background:linear-gradient(135deg,#c9a855,#a07830);border:none;border-radius:8px;padding:12px;color:#080b10;font-weight:700;font-size:13px;cursor:pointer;letter-spacing:1px;">NEXT →</button>
+    </div>
+    <div style="text-align:center;margin-top:12px;"><span onclick="closeOnboarding()" style="font-size:11px;color:#4a4030;cursor:pointer;text-decoration:underline;">Skip for now</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PREMIUM GATE MODAL — upgrade prompt for non-premium
+══════════════════════════════════════════════════ -->
+<div id="premiumGateModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9200;align-items:center;justify-content:center;">
+  <div style="background:linear-gradient(160deg,#0d1117,#12100a);border:1px solid rgba(201,168,85,0.4);border-radius:16px;padding:40px;width:min(420px,90vw);text-align:center;box-shadow:0 0 60px rgba(201,168,85,0.25);">
+    <div style="font-size:48px;margin-bottom:12px;">👑</div>
+    <div style="font-size:20px;font-weight:700;color:#c9a855;margin-bottom:8px;">Premium Feature</div>
+    <div style="font-size:13px;color:#8a7a55;margin-bottom:24px;">This feature requires a <strong style="color:#c9a855;">NitiBot Premium</strong> subscription. Upgrade to unlock document generation, compliance calendar, advanced analytics, and more.</div>
+    <div style="background:rgba(201,168,85,0.07);border:1px solid rgba(201,168,85,0.15);border-radius:10px;padding:16px;margin-bottom:24px;text-align:left;">
+      <div style="font-size:12px;color:#c9a855;font-weight:600;margin-bottom:10px;">What you get with Premium:</div>
+      <div style="font-size:12px;color:#8a7a55;line-height:1.8;">✅ Unlimited AI chat history<br>✅ Legal Document Studio (MOA, SHA, NDA…)<br>✅ Compliance Calendar & Deadline Alerts<br>✅ PDF Document Analysis<br>✅ Priority AI responses<br>✅ Company profile integration</div>
+    </div>
+    <button onclick="closePremiumGate()" style="width:100%;background:linear-gradient(135deg,#c9a855,#a07830);border:none;border-radius:8px;padding:14px;color:#080b10;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:1px;margin-bottom:10px;">UPGRADE TO PREMIUM →</button>
+    <div onclick="closePremiumGate()" style="font-size:11px;color:#4a4030;cursor:pointer;text-decoration:underline;">Maybe later</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     KEYBOARD SHORTCUTS MODAL (press ?)
+══════════════════════════════════════════════════ -->
+<div id="shortcutsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9300;align-items:center;justify-content:center;">
+  <div style="background:#0d1117;border:1px solid rgba(201,168,85,0.3);border-radius:14px;padding:28px;width:min(420px,90vw);position:relative;">
+    <button onclick="document.getElementById('shortcutsModal').style.display='none'" style="position:absolute;top:12px;right:14px;background:transparent;border:none;color:#8a7a55;font-size:18px;cursor:pointer;">✕</button>
+    <div style="font-size:16px;font-weight:700;color:#c9a855;margin-bottom:16px;">⌨️ Keyboard Shortcuts</div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px;">
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(201,168,85,0.08);">
+        <span style="color:#8a7a55;">Open shortcuts</span>
+        <kbd style="background:rgba(201,168,85,0.1);border:1px solid rgba(201,168,85,0.2);border-radius:4px;padding:2px 8px;color:#c9a855;">?</kbd>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(201,168,85,0.08);">
+        <span style="color:#8a7a55;">Focus chat input</span>
+        <kbd style="background:rgba(201,168,85,0.1);border:1px solid rgba(201,168,85,0.2);border-radius:4px;padding:2px 8px;color:#c9a855;">/</kbd>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(201,168,85,0.08);">
+        <span style="color:#8a7a55;">Send message</span>
+        <kbd style="background:rgba(201,168,85,0.1);border:1px solid rgba(201,168,85,0.2);border-radius:4px;padding:2px 8px;color:#c9a855;">Enter</kbd>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(201,168,85,0.08);">
+        <span style="color:#8a7a55;">New line in chat</span>
+        <kbd style="background:rgba(201,168,85,0.1);border:1px solid rgba(201,168,85,0.2);border-radius:4px;padding:2px 8px;color:#c9a855;">Shift + Enter</kbd>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(201,168,85,0.08);">
+        <span style="color:#8a7a55;">Go to Chat</span>
+        <kbd style="background:rgba(201,168,85,0.1);border:1px solid rgba(201,168,85,0.2);border-radius:4px;padding:2px 8px;color:#c9a855;">Ctrl + 1</kbd>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(201,168,85,0.08);">
+        <span style="color:#8a7a55;">Go to Dashboard</span>
+        <kbd style="background:rgba(201,168,85,0.1);border:1px solid rgba(201,168,85,0.2);border-radius:4px;padding:2px 8px;color:#c9a855;">Ctrl + 2</kbd>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;">
+        <span style="color:#8a7a55;">Go to Documents</span>
+        <kbd style="background:rgba(201,168,85,0.1);border:1px solid rgba(201,168,85,0.2);border-radius:4px;padding:2px 8px;color:#c9a855;">Ctrl + 3</kbd>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

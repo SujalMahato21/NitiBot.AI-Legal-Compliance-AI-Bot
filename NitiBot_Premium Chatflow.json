@@ -1,0 +1,509 @@
+{
+  "nodes": [
+    {
+      "id": "conversationChain_0",
+      "position": {
+        "x": 312.4968646452189,
+        "y": 112.70862831303685
+      },
+      "type": "customNode",
+      "data": {
+        "id": "conversationChain_0",
+        "label": "Conversation Chain",
+        "version": 3,
+        "name": "conversationChain",
+        "type": "ConversationChain",
+        "baseClasses": [
+          "ConversationChain",
+          "LLMChain",
+          "BaseChain",
+          "Runnable"
+        ],
+        "category": "Chains",
+        "description": "Chat models specific conversational chain with memory",
+        "inputParams": [
+          {
+            "label": "System Message",
+            "name": "systemMessagePrompt",
+            "type": "string",
+            "rows": 4,
+            "description": "If Chat Prompt Template is provided, this will be ignored",
+            "additionalParams": true,
+            "optional": true,
+            "default": "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.",
+            "placeholder": "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.",
+            "id": "conversationChain_0-input-systemMessagePrompt-string",
+            "display": true
+          }
+        ],
+        "inputAnchors": [
+          {
+            "label": "Chat Model",
+            "name": "model",
+            "type": "BaseChatModel",
+            "id": "conversationChain_0-input-model-BaseChatModel",
+            "display": true
+          },
+          {
+            "label": "Memory",
+            "name": "memory",
+            "type": "BaseMemory",
+            "id": "conversationChain_0-input-memory-BaseMemory",
+            "display": true
+          },
+          {
+            "label": "Chat Prompt Template",
+            "name": "chatPromptTemplate",
+            "type": "ChatPromptTemplate",
+            "description": "Override existing prompt with Chat Prompt Template. Human Message must includes {input} variable",
+            "optional": true,
+            "id": "conversationChain_0-input-chatPromptTemplate-ChatPromptTemplate",
+            "display": true
+          },
+          {
+            "label": "Input Moderation",
+            "description": "Detect text that could generate harmful output and prevent it from being sent to the language model",
+            "name": "inputModeration",
+            "type": "Moderation",
+            "optional": true,
+            "list": true,
+            "id": "conversationChain_0-input-inputModeration-Moderation",
+            "display": true
+          }
+        ],
+        "inputs": {
+          "model": "{{groqChat_0.data.instance}}",
+          "memory": "{{bufferMemory_0.data.instance}}",
+          "chatPromptTemplate": "",
+          "inputModeration": "",
+          "systemMessagePrompt": "You are NitiBot's onboarding assistant for Indian businesses.\n\nAsk the user the following in batches of 2-3 questions. Do not ask all at once. Confirm each answer before proceeding.\n\nCollect these 10 profile fields:\n1. Legal company name\n2. Business type (Pvt Ltd, LLP, Partnership, Sole Proprietor)\n3. CIN number\n4. PAN number\n5. TAN number\n6. GST number\n7. Registered address\n8. Founders (names and roles)\n9. Industry/sector\n10. Year of incorporation\n\nAfter collecting all fields, say: \"Thank you! Your company profile is complete. What document would you like to generate today?\""
+        },
+        "outputAnchors": [
+          {
+            "id": "conversationChain_0-output-conversationChain-ConversationChain|LLMChain|BaseChain|Runnable",
+            "name": "conversationChain",
+            "label": "ConversationChain",
+            "description": "Chat models specific conversational chain with memory",
+            "type": "ConversationChain | LLMChain | BaseChain | Runnable"
+          }
+        ],
+        "outputs": {},
+        "selected": false
+      },
+      "width": 300,
+      "height": 440,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 312.4968646452189,
+        "y": 112.70862831303685
+      },
+      "dragging": false
+    },
+    {
+      "id": "groqChat_0",
+      "position": {
+        "x": 884.2762839879152,
+        "y": 68.96160120845917
+      },
+      "type": "customNode",
+      "data": {
+        "id": "groqChat_0",
+        "label": "Groq",
+        "version": 4,
+        "name": "groqChat",
+        "type": "GroqChat",
+        "baseClasses": [
+          "GroqChat",
+          "BaseChatModel",
+          "BaseLanguageModel",
+          "Runnable"
+        ],
+        "category": "Chat Models",
+        "description": "Wrapper around Groq API with LPU Inference Engine",
+        "inputParams": [
+          {
+            "label": "Connect Credential",
+            "name": "credential",
+            "type": "credential",
+            "credentialNames": [
+              "groqApi"
+            ],
+            "optional": true,
+            "id": "groqChat_0-input-credential-credential",
+            "display": true
+          },
+          {
+            "label": "Model Name",
+            "name": "modelName",
+            "type": "asyncOptions",
+            "loadMethod": "listModels",
+            "placeholder": "llama3-70b-8192",
+            "id": "groqChat_0-input-modelName-asyncOptions",
+            "display": true
+          },
+          {
+            "label": "Temperature",
+            "name": "temperature",
+            "type": "number",
+            "step": 0.1,
+            "default": 0.9,
+            "optional": true,
+            "id": "groqChat_0-input-temperature-number",
+            "display": true
+          },
+          {
+            "label": "Max Tokens",
+            "name": "maxTokens",
+            "type": "number",
+            "step": 1,
+            "optional": true,
+            "additionalParams": true,
+            "id": "groqChat_0-input-maxTokens-number",
+            "display": true
+          },
+          {
+            "label": "Streaming",
+            "name": "streaming",
+            "type": "boolean",
+            "default": true,
+            "optional": true,
+            "id": "groqChat_0-input-streaming-boolean",
+            "display": true
+          }
+        ],
+        "inputAnchors": [
+          {
+            "label": "Cache",
+            "name": "cache",
+            "type": "BaseCache",
+            "optional": true,
+            "id": "groqChat_0-input-cache-BaseCache",
+            "display": true
+          }
+        ],
+        "inputs": {
+          "cache": "",
+          "modelName": "llama-3.3-70b-versatile",
+          "temperature": "0.3",
+          "maxTokens": "",
+          "streaming": true
+        },
+        "outputAnchors": [
+          {
+            "id": "groqChat_0-output-groqChat-GroqChat|BaseChatModel|BaseLanguageModel|Runnable",
+            "name": "groqChat",
+            "label": "GroqChat",
+            "description": "Wrapper around Groq API with LPU Inference Engine",
+            "type": "GroqChat | BaseChatModel | BaseLanguageModel | Runnable"
+          }
+        ],
+        "outputs": {},
+        "selected": false
+      },
+      "width": 300,
+      "height": 675,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 884.2762839879152,
+        "y": 68.96160120845917
+      }
+    },
+    {
+      "id": "customFunction_0",
+      "position": {
+        "x": -297.5334165059083,
+        "y": 63.87189583854956
+      },
+      "type": "customNode",
+      "data": {
+        "id": "customFunction_0",
+        "label": "Custom JS Function",
+        "version": 3,
+        "name": "customFunction",
+        "type": "CustomFunction",
+        "baseClasses": [
+          "CustomFunction",
+          "Utilities"
+        ],
+        "tags": [
+          "Utilities"
+        ],
+        "category": "Utilities",
+        "description": "Execute custom javascript function",
+        "inputParams": [
+          {
+            "label": "Input Variables",
+            "name": "functionInputVariables",
+            "description": "Input variables can be used in the function with prefix $. For example: $var",
+            "type": "json",
+            "optional": true,
+            "acceptVariable": true,
+            "list": true,
+            "id": "customFunction_0-input-functionInputVariables-json",
+            "display": true
+          },
+          {
+            "label": "Function Name",
+            "name": "functionName",
+            "type": "string",
+            "optional": true,
+            "placeholder": "My Function",
+            "id": "customFunction_0-input-functionName-string",
+            "display": true
+          },
+          {
+            "label": "Javascript Function",
+            "name": "javascriptFunction",
+            "type": "code",
+            "id": "customFunction_0-input-javascriptFunction-code",
+            "display": true
+          }
+        ],
+        "inputAnchors": [
+          {
+            "label": "Additional Tools",
+            "description": "Tools can be used in the function with $tools.{tool_name}.invoke(args)",
+            "name": "tools",
+            "type": "Tool",
+            "list": true,
+            "optional": true,
+            "id": "customFunction_0-input-tools-Tool",
+            "display": true
+          }
+        ],
+        "inputs": {
+          "functionInputVariables": "",
+          "functionName": "checkPremiumUsers",
+          "tools": "",
+          "javascriptFunction": "const userId = $input || \"guest\";\nconst premiumUsers = [\"test_user_001\", \"sujalmahato709\"];\n\nif (!premiumUsers.includes(userId)) {\n  return \"Upgrade to Premium to access document generation.\";\n}\n\nreturn \"Access granted. Proceed to document generation.\";"
+        },
+        "outputAnchors": [
+          {
+            "name": "output",
+            "label": "Output",
+            "type": "options",
+            "description": "",
+            "options": [
+              {
+                "id": "customFunction_0-output-output-string|number|boolean|json|array",
+                "name": "output",
+                "label": "Output",
+                "description": "",
+                "type": "string | number | boolean | json | array"
+              },
+              {
+                "id": "customFunction_0-output-EndingNode-CustomFunction",
+                "name": "EndingNode",
+                "label": "Ending Node",
+                "description": "",
+                "type": "CustomFunction"
+              }
+            ],
+            "default": "output"
+          }
+        ],
+        "outputs": {
+          "output": "output"
+        },
+        "selected": false
+      },
+      "width": 300,
+      "height": 731,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -297.5334165059083,
+        "y": 63.87189583854956
+      },
+      "dragging": false
+    },
+    {
+      "id": "bufferMemory_0",
+      "position": {
+        "x": -239.65530379721883,
+        "y": -268.32203696977666
+      },
+      "type": "customNode",
+      "data": {
+        "id": "bufferMemory_0",
+        "label": "Buffer Memory",
+        "version": 2,
+        "name": "bufferMemory",
+        "type": "BufferMemory",
+        "baseClasses": [
+          "BufferMemory",
+          "BaseChatMemory",
+          "BaseMemory"
+        ],
+        "category": "Memory",
+        "description": "Retrieve chat messages stored in database",
+        "inputParams": [
+          {
+            "label": "Session Id",
+            "name": "sessionId",
+            "type": "string",
+            "description": "If not specified, a random id will be used. Learn <a target=\"_blank\" href=\"https://docs.flowiseai.com/memory#ui-and-embedded-chat\">more</a>",
+            "default": "",
+            "additionalParams": true,
+            "optional": true,
+            "id": "bufferMemory_0-input-sessionId-string",
+            "display": true
+          },
+          {
+            "label": "Memory Key",
+            "name": "memoryKey",
+            "type": "string",
+            "default": "chat_history",
+            "additionalParams": true,
+            "id": "bufferMemory_0-input-memoryKey-string",
+            "display": true
+          }
+        ],
+        "inputAnchors": [],
+        "inputs": {
+          "sessionId": "",
+          "memoryKey": "chat_history"
+        },
+        "outputAnchors": [
+          {
+            "id": "bufferMemory_0-output-bufferMemory-BufferMemory|BaseChatMemory|BaseMemory",
+            "name": "bufferMemory",
+            "label": "BufferMemory",
+            "description": "Retrieve chat messages stored in database",
+            "type": "BufferMemory | BaseChatMemory | BaseMemory"
+          }
+        ],
+        "outputs": {},
+        "selected": false
+      },
+      "width": 300,
+      "height": 257,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -239.65530379721883,
+        "y": -268.32203696977666
+      },
+      "dragging": false
+    },
+    {
+      "id": "customTool_0",
+      "position": {
+        "x": 337.37324708639704,
+        "y": -425.00662924285916
+      },
+      "type": "customNode",
+      "data": {
+        "id": "customTool_0",
+        "label": "Custom Tool",
+        "version": 3,
+        "name": "customTool",
+        "type": "CustomTool",
+        "baseClasses": [
+          "CustomTool",
+          "Tool",
+          "StructuredTool",
+          "Runnable"
+        ],
+        "category": "Tools",
+        "description": "Use custom tool you've created in Flowise within chatflow",
+        "inputParams": [
+          {
+            "label": "Select Tool",
+            "name": "selectedTool",
+            "type": "asyncOptions",
+            "loadMethod": "listTools",
+            "id": "customTool_0-input-selectedTool-asyncOptions",
+            "display": true
+          },
+          {
+            "label": "Return Direct",
+            "name": "returnDirect",
+            "description": "Return the output of the tool directly to the user",
+            "type": "boolean",
+            "optional": true,
+            "id": "customTool_0-input-returnDirect-boolean",
+            "display": true
+          },
+          {
+            "label": "Custom Tool Name",
+            "name": "customToolName",
+            "type": "string",
+            "hidden": true,
+            "id": "customTool_0-input-customToolName-string",
+            "display": true
+          },
+          {
+            "label": "Custom Tool Description",
+            "name": "customToolDesc",
+            "type": "string",
+            "hidden": true,
+            "id": "customTool_0-input-customToolDesc-string",
+            "display": true
+          },
+          {
+            "label": "Custom Tool Schema",
+            "name": "customToolSchema",
+            "type": "string",
+            "hidden": true,
+            "id": "customTool_0-input-customToolSchema-string",
+            "display": true
+          },
+          {
+            "label": "Custom Tool Func",
+            "name": "customToolFunc",
+            "type": "string",
+            "hidden": true,
+            "id": "customTool_0-input-customToolFunc-string",
+            "display": true
+          }
+        ],
+        "inputAnchors": [],
+        "inputs": {
+          "selectedTool": "",
+          "returnDirect": "",
+          "customToolName": "",
+          "customToolDesc": "",
+          "customToolSchema": "",
+          "customToolFunc": ""
+        },
+        "outputAnchors": [
+          {
+            "id": "customTool_0-output-customTool-CustomTool|Tool|StructuredTool|Runnable",
+            "name": "customTool",
+            "label": "CustomTool",
+            "description": "Use custom tool you've created in Flowise within chatflow",
+            "type": "CustomTool | Tool | StructuredTool | Runnable"
+          }
+        ],
+        "outputs": {},
+        "selected": false
+      },
+      "width": 300,
+      "height": 377,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 337.37324708639704,
+        "y": -425.00662924285916
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "groqChat_0",
+      "sourceHandle": "groqChat_0-output-groqChat-GroqChat|BaseChatModel|BaseLanguageModel|Runnable",
+      "target": "conversationChain_0",
+      "targetHandle": "conversationChain_0-input-model-BaseChatModel",
+      "type": "buttonedge",
+      "id": "groqChat_0-groqChat_0-output-groqChat-GroqChat|BaseChatModel|BaseLanguageModel|Runnable-conversationChain_0-conversationChain_0-input-model-BaseChatModel"
+    },
+    {
+      "source": "bufferMemory_0",
+      "sourceHandle": "bufferMemory_0-output-bufferMemory-BufferMemory|BaseChatMemory|BaseMemory",
+      "target": "conversationChain_0",
+      "targetHandle": "conversationChain_0-input-memory-BaseMemory",
+      "type": "buttonedge",
+      "id": "bufferMemory_0-bufferMemory_0-output-bufferMemory-BufferMemory|BaseChatMemory|BaseMemory-conversationChain_0-conversationChain_0-input-memory-BaseMemory"
+    }
+  ]
+}

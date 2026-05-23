@@ -1,0 +1,10 @@
+version: "2"
+authtoken: 3DLeFN5PJL46autOod9ZyS3Byse_4LTPkEqKwLjsd6Lw3M4js
+tunnels:
+  flowise:
+    proto: http
+    addr: 3000
+  botui:
+    proto: http
+    addr: 8080
+    domain: strudel-deferred-stooge.ngrok-free.dev

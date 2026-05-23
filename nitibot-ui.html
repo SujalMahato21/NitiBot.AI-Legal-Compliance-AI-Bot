@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NitiBot — AI Legal Compliance</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════
+   DESIGN TOKENS
+════════════════════════════════════════════════════════ */
+:root {
+  --bg-void:      #080b10;
+  --bg-surface:   #0d1018;
+  --bg-elevated:  #111620;
+  --bg-card:      #141a26;
+  --bg-input:     #0f1420;
+
+  --gold:         #c9a855;
+  --gold-dim:     #96782d;
+  --gold-glow:    rgba(201,168,85,0.18);
+  --gold-subtle:  rgba(201,168,85,0.07);
+
+  --blue-ai:      #4a7fb5;
+  --blue-ai-dim:  rgba(74,127,181,0.3);
+
+  --text-primary:   #f0e6cc;
+  --text-secondary: #8a8070;
+  --text-muted:     #4a4535;
+
+  --border:       rgba(201,168,85,0.14);
+  --border-hover: rgba(201,168,85,0.3);
+
+  --radius:       12px;
+  --radius-sm:    8px;
+  --radius-pill:  999px;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out:    cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ════════════════════════════════════════════════════════
+   RESET & BASE
+════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+
+body {
+  height: 100%;
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Animated grid ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(201,168,85,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,85,0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: gridDrift 20s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes gridDrift {
+  0%   { background-position: 0 0; }
+  100% { background-position: 48px 48px; }
+}
+
+/* ── Radial ambient glow ── */
+body::after {
+  content: '';
+  position: fixed;
+  top: -20%; left: 50%;
+  transform: translateX(-50%);
+  width: 900px; height: 500px;
+  background: radial-gradient(ellipse, rgba(201,168,85,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  animation: ambientPulse 6s ease-in-out infinite;
+}
+
+@keyframes ambientPulse {
+  0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+  50%       { opacity: 1; transform: translateX(-50%) scale(1.08); }
+}
+
+/* ════════════════════════════════════════════════════════
+   LAYOUT
+════════════════════════════════════════════════════════ */
+#app {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ════════════════════════════════════════════════════════
+   HEADER
+════════════════════════════════════════════════════════ */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 0 16px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  flex-shrink: 0;
+  animation: slideDown 0.7s var(--ease-out-quint) both;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 15%; right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 1; }
+}
+
+.logo-lockup {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ── Shield icon with pulse ── */
+.icon-wrap {
+  position: relative;
+  width: 46px; height: 46px;
+  flex-shrink: 0;
+}
+
+.icon-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(201,168,85,0.25);
+  animation: iconRing 2.6s ease-in-out infinite;
+}
+.icon-ring-1 { inset: -7px; animation-delay: 0s; }
+.icon-ring-2 { inset: -14px; animation-delay: 0.9s; opacity: 0.5; }
+
+@keyframes iconRing {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50%       { transform: scale(1.05); opacity: 1; }
+}
+
+.shield-svg { width: 46px; height: 46px; }
+
+/* ── Wordmark ── */
+.wordmark { display: flex; flex-direction: column; gap: 2px; }
+
+.wordmark-top {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.w-niti {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.w-bot {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.15em;
+  margin-bottom: 3px;
+}
+
+.tagline {
+  font-family: 'Space Mono', monospace;
+  font-size: 7px;
+  letter-spacing: 0.3em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* ── Status pill ── */
+.status-group { display: flex; align-items: center; gap: 10px; }
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text-secondary);
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #3dba6f;
+  box-shadow: 0 0 8px #3dba6f;
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { box-shadow: 0 0 6px #3dba6f; }
+  50%       { box-shadow: 0 0 14px #3dba6f; }
+}
+
+@keyframes badgePulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(201,168,85,0.2); }
+  50% { box-shadow: 0 0 20px rgba(201,168,85,0.45); }
+}
+
+.header-menu-btn {
+  width: 34px; height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.header-menu-btn:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card);
+}
+
+.premium-upgrade-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(201,168,85,0.5);
+  background: linear-gradient(135deg, rgba(201,168,85,0.15), rgba(201,168,85,0.05));
+  color: #c9a855;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  animation: badgePulse 3s ease-in-out infinite;
+  text-decoration: none;
+}
+
+/* ════════════════════════════════════════════════════════
+   CONTEXT CHIPS (Acts dropdown strip)
+════════════════════════════════════════════════════════ */
+.context-strip {
+  display: flex;
+  gap: 8px;
+  padding: 12px 0;
+  overflow-x: auto;
+  flex-shrink: 0;
+  scrollbar-width: none;
+  animation: slideDown 0.8s var(--ease-out-quint) 0.1s both;
+}
+.context-strip::-webkit-scrollbar { display: none; }
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  font-size: 11px;
+  font-family: 'Space Mono', monospace;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s, color 0.2s, background 0.2s, transform 0.2s;
+  letter-spacing: 0.05em;
+}
+
+.chip:hover {
+  border-color: var(--border-hover);
+  color: var(--gold);
+  background: var(--gold-subtle);
+  transform: translateY(-1px);
+}
+
+.chip.active {
+  border-color: var(--gold-dim);
+  color: var(--gold);
+  background: var(--gold-subtle);
+}
+
+.chip-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0.6;
+}
+
+/* ════════════════════════════════════════════════════════
+   CHAT MESSAGES
+════════════════════════════════════════════════════════ */
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+#messages::-webkit-scrollbar { width: 4px; }
+#messages::-webkit-scrollbar-track { background: transparent; }
+#messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Empty state ── */
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 40px 0;
+  animation: fadeIn 0.9s var(--ease-out-quint) 0.3s both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.empty-icon {
+  position: relative;
+  width: 90px; height: 90px;
+}
+
+.empty-icon svg { width: 90px; height: 90px; }
+
+.empty-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(201,168,85,0.15);
+  animation: emptyRing 3s ease-in-out infinite;
+}
+.er1 { inset: -12px; animation-delay: 0s; }
+.er2 { inset: -22px; animation-delay: 1s; opacity: 0.5; }
+.er3 { inset: -34px; animation-delay: 2s; opacity: 0.2; }
+
+@keyframes emptyRing {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50%       { transform: scale(1.04); opacity: 1; }
+}
+
+.empty-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: -0.3px;
+}
+
+.empty-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 340px;
+  line-height: 1.7;
+  font-weight: 300;
+}
+
+/* ── Starter questions ── */
+.starters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  max-width: 560px;
+}
+
+.starter-card {
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: border-color 0.25s, background 0.25s, transform 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.starter-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--gold-subtle), transparent);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.starter-card:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-elevated);
+  transform: translateY(-2px);
+}
+
+.starter-card:hover::before { opacity: 1; }
+
+.starter-label {
+  font-size: 11px;
+  font-family: 'Space Mono', monospace;
+  color: var(--gold-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.starter-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+/* ── Message bubble ── */
+.msg {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  animation: msgIn 0.45s var(--ease-out-quint) both;
+}
+
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg.user { flex-direction: row-reverse; }
+
+.msg-avatar {
+  width: 34px; height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.msg.bot .msg-avatar {
+  background: var(--bg-card);
+  border-color: rgba(201,168,85,0.25);
+}
+
+.msg.user .msg-avatar {
+  background: var(--bg-elevated);
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--gold);
+}
+
+.msg-body { max-width: 78%; display: flex; flex-direction: column; gap: 6px; }
+.msg.user .msg-body { align-items: flex-end; }
+
+.msg-bubble {
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  line-height: 1.7;
+  font-weight: 400;
+  position: relative;
+}
+
+.msg.bot .msg-bubble {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: var(--radius) var(--radius) var(--radius) 4px;
+}
+
+.msg.bot .msg-bubble::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(201,168,85,0.4), transparent);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.msg.user .msg-bubble {
+  background: linear-gradient(135deg, #1a2030, #141c2a);
+  border: 1px solid var(--border-hover);
+  color: var(--text-primary);
+  border-radius: var(--radius) var(--radius) 4px var(--radius);
+}
+
+/* Source citation badges */
+.source-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.source-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(74,127,181,0.3);
+  background: rgba(74,127,181,0.08);
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--blue-ai);
+}
+
+.msg-meta {
+  font-size: 10px;
+  font-family: 'Space Mono', monospace;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+/* ── Typing indicator ── */
+.typing-bubble {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) var(--radius) 4px;
+  width: fit-content;
+}
+
+.typing-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: typingBounce 1.1s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; background: var(--gold-dim); }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; background: var(--text-muted); }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30%            { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ── Stream cursor ── */
+.stream-cursor {
+  display: inline-block;
+  width: 2px; height: 14px;
+  background: var(--gold);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 0.8s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ════════════════════════════════════════════════════════
+   INPUT AREA
+════════════════════════════════════════════════════════ */
+.input-area {
+  padding: 16px 0 20px;
+  flex-shrink: 0;
+  animation: slideUp 0.7s var(--ease-out-quint) 0.2s both;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.input-shell {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.input-shell::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.input-shell:focus-within {
+  border-color: rgba(201,168,85,0.35);
+  box-shadow: 0 0 0 3px rgba(201,168,85,0.06), 0 8px 32px rgba(0,0,0,0.4);
+}
+
+.input-shell:focus-within::before { opacity: 1; }
+
+textarea {
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary);
+  width: 100%;
+  min-height: 24px;
+  max-height: 140px;
+  line-height: 1.6;
+  caret-color: var(--gold);
+}
+
+textarea::placeholder { color: var(--text-muted); }
+
+.input-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.input-left { display: flex; align-items: center; gap: 8px; }
+
+.input-hint {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+}
+
+.send-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gold-dim);
+  background: linear-gradient(135deg, rgba(201,168,85,0.15), rgba(201,168,85,0.05));
+  color: var(--gold);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.send-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(201,168,85,0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.send-btn:hover {
+  background: linear-gradient(135deg, rgba(201,168,85,0.25), rgba(201,168,85,0.1));
+  border-color: var(--gold);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(201,168,85,0.2);
+}
+
+.send-btn:hover::after { opacity: 1; }
+.send-btn:active { transform: translateY(0); }
+
+.send-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.send-arrow {
+  transition: transform 0.2s;
+}
+.send-btn:not(:disabled):hover .send-arrow {
+  transform: translateX(2px);
+}
+
+/* ── Tool icon buttons ── */
+.tool-btn {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.tool-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--gold);
+}
+
+/* ════════════════════════════════════════════════════════
+   FLOWISE CONFIG PANEL
+════════════════════════════════════════════════════════ */
+.config-overlay {
+  position: fixed; inset: 0;
+  background: rgba(8,11,16,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.25s ease;
+}
+
+.config-overlay.open { display: flex; }
+
+.config-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hover);
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  animation: panelIn 0.35s var(--ease-out-quint) both;
+}
+
+@keyframes panelIn {
+  from { opacity: 0; transform: scale(0.94) translateY(20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.config-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 15%; right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.config-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.config-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.config-field { margin-bottom: 16px; }
+
+.config-label {
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.config-input {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.config-input:focus { border-color: rgba(201,168,85,0.4); }
+.config-input::placeholder { color: var(--text-muted); }
+
+.config-save {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gold-dim);
+  background: linear-gradient(135deg, rgba(201,168,85,0.2), rgba(201,168,85,0.05));
+  color: var(--gold);
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.config-save:hover {
+  background: linear-gradient(135deg, rgba(201,168,85,0.3), rgba(201,168,85,0.12));
+  box-shadow: 0 4px 20px rgba(201,168,85,0.2);
+}
+
+.config-close {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.config-close:hover { border-color: var(--border-hover); color: var(--text-primary); }
+
+/* ════════════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════════════ */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-pill);
+  padding: 10px 20px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--text-primary);
+  letter-spacing: 0.1em;
+  z-index: 200;
+  transition: transform 0.4s var(--ease-out-quint), opacity 0.4s;
+  opacity: 0;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ════════════════════════════════════════════════════════
+   SCROLLBAR + UTILITIES
+════════════════════════════════════════════════════════ */
+.separator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-muted);
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  margin: 4px 0;
+}
+
+.separator::before, .separator::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ════════════════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .starters { grid-template-columns: 1fr; }
+  .w-niti   { font-size: 26px; }
+  .msg-body { max-width: 88%; }
+  .status-pill { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ CONFIG PANEL ══ -->
+<div class="config-overlay" id="configOverlay">
+  <div class="config-panel">
+    <button class="config-close" onclick="closeConfig()">✕</button>
+    <div class="config-title">Flowise Connection</div>
+    <div class="config-sub">Connect NitiBot to your running Flowise instance. Find the chatflow ID in your Flowise dashboard URL.</div>
+
+    <div class="config-field">
+      <label class="config-label">Flowise Base URL</label>
+      <input class="config-input" id="flowiseUrl" type="text"
+        placeholder="http://localhost:3000"
+        value="http://localhost:3000">
+    </div>
+
+    <div class="config-field">
+      <label class="config-label">Chatflow ID</label>
+      <input class="config-input" id="chatflowId" type="text"
+        placeholder="your-chatflow-uuid-here"
+        value="">
+    </div>
+
+    <div class="config-field">
+      <label class="config-label">API Key (optional)</label>
+      <input class="config-input" id="apiKey" type="password"
+        placeholder="Leave blank if auth is disabled">
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <button class="config-save" onclick="saveConfig()" style="flex:1">SAVE &amp; CONNECT</button>
+      <button class="config-save" id="testBtn" onclick="testConnection()"
+        style="flex:0 0 auto;padding:12px 16px;background:transparent;border-color:rgba(201,168,85,0.3);">
+        TEST
+      </button>
+    </div>
+
+    <div style="margin-top:18px;padding:14px;background:rgba(74,127,181,0.06);border:1px solid rgba(74,127,181,0.18);border-radius:8px;">
+      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.2em;color:#4a7fb5;margin-bottom:8px;">IF YOU SEE "FAILED TO FETCH"</div>
+      <div style="font-size:12px;color:#8a8070;line-height:1.8;">
+        Browsers block <code style="font-family:'Space Mono',monospace;font-size:10px;color:#c9a855;background:rgba(201,168,85,0.08);padding:1px 5px;border-radius:3px;">file://</code> to <code style="font-family:'Space Mono',monospace;font-size:10px;color:#c9a855;background:rgba(201,168,85,0.08);padding:1px 5px;border-radius:3px;">localhost</code> requests.
+        Serve this file over HTTP — open a terminal in the folder and run:<br><br>
+        <code style="display:block;font-family:'Space Mono',monospace;font-size:11px;color:#c9a855;background:rgba(8,11,16,0.7);padding:9px 12px;border-radius:6px;border:1px solid rgba(201,168,85,0.12);">npx serve .</code><br>
+        Then open the <strong style="color:#f0e6cc;">http://localhost:3001</strong> URL it shows.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div class="toast" id="toast"></div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-lockup">
+      <div class="icon-wrap">
+        <div class="icon-ring icon-ring-1"></div>
+        <div class="icon-ring icon-ring-2"></div>
+        <svg class="shield-svg" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M36 4 L62 16 L62 40 C62 56 36 68 36 68 C36 68 10 56 10 40 L10 16 Z"
+            fill="#0d1018" stroke="#c9a855" stroke-width="1.4"/>
+          <path d="M36 11 L56 21 L56 39 C56 52 36 62 36 62 C36 62 16 52 16 39 L16 21 Z"
+            fill="none" stroke="#c9a855" stroke-width="0.6" opacity="0.35"/>
+          <line x1="22" y1="34" x2="50" y2="34" stroke="#c9a855" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="36" y1="22" x2="36" y2="54" stroke="#c9a855" stroke-width="1.2" stroke-linecap="round"/>
+          <circle cx="36" cy="23" r="2.5" fill="#c9a855"/>
+          <line x1="24" y1="34" x2="22" y2="42" stroke="#c9a855" stroke-width="0.9" stroke-dasharray="2 1.5"/>
+          <path d="M17 42 Q22 47 27 42" stroke="#c9a855" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+          <line x1="48" y1="34" x2="50" y2="42" stroke="#c9a855" stroke-width="0.9" stroke-dasharray="2 1.5"/>
+          <path d="M45 42 Q50 47 55 42" stroke="#c9a855" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+          <rect x="30" y="52" width="12" height="2" rx="1" fill="#c9a855" opacity="0.6"/>
+          <circle cx="22" cy="26" r="2" fill="#4a7fb5" opacity="0.9"/>
+          <circle cx="50" cy="26" r="2" fill="#4a7fb5" opacity="0.9"/>
+          <line x1="24" y1="26" x2="34" y2="26" stroke="#4a7fb5" stroke-width="0.8" opacity="0.6"/>
+          <line x1="38" y1="26" x2="48" y2="26" stroke="#4a7fb5" stroke-width="0.8" opacity="0.6"/>
+          <circle cx="36" cy="26" r="1.4" fill="#4a7fb5" opacity="0.8"/>
+        </svg>
+      </div>
+
+      <div class="wordmark">
+        <div class="wordmark-top">
+          <span class="w-niti">Niti</span>
+          <span class="w-bot">BOT</span>
+        </div>
+        <div class="tagline">AI · Legal Compliance · India</div>
+        <div style="font-family:'Space Mono',monospace;font-size:7px;letter-spacing:0.2em;color:#4a4535;margin-top:2px;">FREE TIER</div>
+      </div>
+    </div>
+
+    <div class="status-group">
+      <div class="status-pill">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">CONNECTED</span>
+      </div>
+      <button class="premium-upgrade-btn" onclick="window.location.href = 'nitibot-premium-v5.html'" title="Upgrade to NitiBot Premium — Compliance Dashboard, Document Studio, Analytics & more">
+        👑 PREMIUM
+      </button>
+      <button class="header-menu-btn" onclick="openConfig()" title="Configure Flowise">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" color="#8a8070">
+          <circle cx="8" cy="8" r="2.5"/>
+          <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M11.5 3.1l-1.4 1.4M3.1 11.5l1.4 1.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTEXT CHIPS -->
+  <div class="context-strip">
+    <div class="chip active" onclick="setFilter(this, null)">
+      <div class="chip-dot"></div>All Acts
+    </div>
+    <div class="chip" onclick="setFilter(this, 'GST Act')">GST Act 2017</div>
+    <div class="chip" onclick="setFilter(this, 'Companies Act')">Companies Act 2013</div>
+    <div class="chip" onclick="setFilter(this, 'IT Act')">IT Act 2000</div>
+    <div class="chip" onclick="setFilter(this, 'SEBI')">SEBI Regulations</div>
+    <div class="chip" onclick="setFilter(this, 'RBI')">RBI Guidelines</div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div id="messages">
+    <!-- Empty state shown on load -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">
+        <div class="empty-ring er1"></div>
+        <div class="empty-ring er2"></div>
+        <div class="empty-ring er3"></div>
+        <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M36 4 L62 16 L62 40 C62 56 36 68 36 68 C36 68 10 56 10 40 L10 16 Z"
+            fill="#080b10" stroke="#c9a855" stroke-width="1.4"/>
+          <path d="M36 11 L56 21 L56 39 C56 52 36 62 36 62 C36 62 16 52 16 39 L16 21 Z"
+            fill="none" stroke="#c9a855" stroke-width="0.6" opacity="0.35"/>
+          <line x1="22" y1="34" x2="50" y2="34" stroke="#c9a855" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="36" y1="22" x2="36" y2="54" stroke="#c9a855" stroke-width="1.2" stroke-linecap="round"/>
+          <circle cx="36" cy="23" r="2.5" fill="#c9a855"/>
+          <line x1="24" y1="34" x2="22" y2="42" stroke="#c9a855" stroke-width="0.9" stroke-dasharray="2 1.5"/>
+          <path d="M17 42 Q22 47 27 42" stroke="#c9a855" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+          <line x1="48" y1="34" x2="50" y2="42" stroke="#c9a855" stroke-width="0.9" stroke-dasharray="2 1.5"/>
+          <path d="M45 42 Q50 47 55 42" stroke="#c9a855" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+          <rect x="30" y="52" width="12" height="2" rx="1" fill="#c9a855" opacity="0.6"/>
+          <circle cx="22" cy="26" r="2" fill="#4a7fb5" opacity="0.9"/>
+          <circle cx="50" cy="26" r="2" fill="#4a7fb5" opacity="0.9"/>
+          <line x1="24" y1="26" x2="34" y2="26" stroke="#4a7fb5" stroke-width="0.8" opacity="0.6"/>
+          <line x1="38" y1="26" x2="48" y2="26" stroke="#4a7fb5" stroke-width="0.8" opacity="0.6"/>
+          <circle cx="36" cy="26" r="1.4" fill="#4a7fb5" opacity="0.8"/>
+        </svg>
+      </div>
+      <div>
+        <div class="empty-title">Ask NitiBot anything about<br>Indian legal compliance</div>
+        <div class="empty-sub" style="margin-top:10px">Powered by GST Act · Companies Act · IT Act · SEBI · RBI</div>
+      </div>
+      <div class="starters">
+        <div class="starter-card" onclick="fillQuestion(this.querySelector('.starter-text').textContent)">
+          <div class="starter-label">📋 GST</div>
+          <div class="starter-text">What is the GST registration threshold for businesses?</div>
+        </div>
+        <div class="starter-card" onclick="fillQuestion(this.querySelector('.starter-text').textContent)">
+          <div class="starter-label">🏢 Companies Act</div>
+          <div class="starter-text">What are director responsibilities under Companies Act 2013?</div>
+        </div>
+        <div class="starter-card" onclick="fillQuestion(this.querySelector('.starter-text').textContent)">
+          <div class="starter-label">💻 IT Act</div>
+          <div class="starter-text">What are data protection obligations for businesses under IT Act?</div>
+        </div>
+        <div class="starter-card" onclick="fillQuestion(this.querySelector('.starter-text').textContent)">
+          <div class="starter-label">📈 SEBI</div>
+          <div class="starter-text">What are insider trading regulations under SEBI?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <div class="input-area">
+    <div class="input-shell">
+      <textarea id="userInput" rows="1"
+        placeholder="Ask about GST, Companies Act, IT Act, SEBI, RBI…"
+        onkeydown="handleKey(event)"
+        oninput="autoResize(this)"></textarea>
+      <div class="input-actions">
+        <div class="input-left">
+          <button class="tool-btn" title="Clear conversation" onclick="clearChat()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M1 2h11M4 2V1h4v1M10 2l-.5 10H6m-3.5 0L2 4.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <span class="input-hint" id="filterIndicator">ALL ACTS</span>
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          SEND
+          <svg class="send-arrow" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 6.5h10M7 2l5 4.5-5 4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+/* ════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════ */
+let config = {
+  url:        localStorage.getItem('nb_url')        || 'http://localhost:3000',
+  chatflowId: localStorage.getItem('nb_chatflowId') || '',
+  apiKey:     localStorage.getItem('nb_apiKey')     || '',
+};
+
+let sessionId    = localStorage.getItem('nb_session') || generateId();
+let chatHistory  = [];
+let activeFilter = null;
+let isStreaming  = false;
+
+localStorage.setItem('nb_session', sessionId);
+
+/* ════════════════════════════════════════════════════
+   UTILS
+════════════════════════════════════════════════════ */
+function generateId() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function timestamp() {
+  return new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+
+function scrollBottom() {
+  const m = document.getElementById('messages');
+  m.scrollTo({ top: m.scrollHeight, behavior: 'smooth' });
+}
+
+function showToast(msg, dur = 2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+/* ════════════════════════════════════════════════════
+   CONFIG PANEL
+════════════════════════════════════════════════════ */
+function openConfig() {
+  document.getElementById('flowiseUrl').value  = config.url;
+  document.getElementById('chatflowId').value  = config.chatflowId;
+  document.getElementById('apiKey').value      = config.apiKey;
+  document.getElementById('configOverlay').classList.add('open');
+}
+
+function closeConfig() {
+  document.getElementById('configOverlay').classList.remove('open');
+}
+
+function saveConfig() {
+  config.url        = document.getElementById('flowiseUrl').value.trim().replace(/\/$/, '');
+  config.chatflowId = document.getElementById('chatflowId').value.trim();
+  config.apiKey     = document.getElementById('apiKey').value.trim();
+
+  localStorage.setItem('nb_url',        config.url);
+  localStorage.setItem('nb_chatflowId', config.chatflowId);
+  localStorage.setItem('nb_apiKey',     config.apiKey);
+
+  closeConfig();
+  showToast('✓ FLOWISE CONFIG SAVED');
+  updateStatus(true);
+}
+
+function updateStatus(ok) {
+  document.getElementById('statusDot').style.background  = ok ? '#3dba6f' : '#e05555';
+  document.getElementById('statusDot').style.boxShadow   = ok ? '0 0 10px #3dba6f' : '0 0 10px #e05555';
+  document.getElementById('statusText').textContent       = ok ? 'CONNECTED' : 'DISCONNECTED';
+}
+
+/* ════════════════════════════════════════════════════
+   FILTER CHIPS
+════════════════════════════════════════════════════ */
+function setFilter(el, filter) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeFilter = filter;
+  document.getElementById('filterIndicator').textContent = filter ? filter.toUpperCase() : 'ALL ACTS';
+}
+
+/* ════════════════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════════════════ */
+function hideEmpty() {
+  const es = document.getElementById('emptyState');
+  if (es) {
+    es.style.opacity = '0';
+    es.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => es.remove(), 300);
+  }
+}
+
+function fillQuestion(text) {
+  const ta = document.getElementById('userInput');
+  ta.value = text;
+  autoResize(ta);
+  ta.focus();
+}
+
+/* ════════════════════════════════════════════════════
+   RENDER MESSAGES
+════════════════════════════════════════════════════ */
+function appendUserMsg(text) {
+  hideEmpty();
+  const msgs = document.getElementById('messages');
+  const el   = document.createElement('div');
+  el.className = 'msg user';
+  el.innerHTML = `
+    <div class="msg-avatar">YOU</div>
+    <div class="msg-body">
+      <div class="msg-bubble">${escapeHtml(text)}</div>
+      <div class="msg-meta">${timestamp()}</div>
+    </div>`;
+  msgs.appendChild(el);
+  scrollBottom();
+}
+
+function appendTyping() {
+  hideEmpty();
+  const msgs = document.getElementById('messages');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg bot';
+  wrap.id = 'typingMsg';
+  wrap.innerHTML = `
+    <div class="msg-avatar">
+      <svg width="18" height="18" viewBox="0 0 72 72" fill="none">
+        <path d="M36 4 L62 16 L62 40 C62 56 36 68 36 68 C36 68 10 56 10 40 L10 16 Z" fill="#0d1018" stroke="#c9a855" stroke-width="2"/>
+        <line x1="22" y1="34" x2="50" y2="34" stroke="#c9a855" stroke-width="2" stroke-linecap="round"/>
+        <line x1="36" y1="22" x2="36" y2="50" stroke="#c9a855" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="36" cy="23" r="3" fill="#c9a855"/>
+      </svg>
+    </div>
+    <div class="msg-body">
+      <div class="typing-bubble">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>`;
+  msgs.appendChild(wrap);
+  scrollBottom();
+  return wrap;
+}
+
+function replaceTypingWithStream(typingEl) {
+  const body = typingEl.querySelector('.msg-body');
+  body.innerHTML = `
+    <div class="msg-bubble" id="streamBubble"></div>
+    <div class="msg-meta" id="streamMeta">${timestamp()}</div>`;
+  scrollBottom();
+}
+
+function finalizeBotMsg(typingEl, fullText, sources) {
+  const body = typingEl.querySelector('.msg-body');
+  let sourcesHtml = '';
+  if (sources && sources.length > 0) {
+    const badges = sources.map(s =>
+      `<span class="source-badge">§ ${escapeHtml(s.metadata?.source || s.source || 'Source')}</span>`
+    ).join('');
+    sourcesHtml = `<div class="source-badges">${badges}</div>`;
+  }
+  body.innerHTML = `
+    <div class="msg-bubble">${formatText(fullText)}</div>
+    ${sourcesHtml}
+    <div class="msg-meta">${timestamp()}</div>`;
+  scrollBottom();
+}
+
+/* ════════════════════════════════════════════════════
+   FLOWISE API CALL
+════════════════════════════════════════════════════ */
+async function callFlowise(question) {
+  if (!config.chatflowId) {
+    showToast('⚠ Set your Chatflow ID in settings first');
+    openConfig();
+    throw new Error('No Chatflow ID configured. Click ⚙ to set it.');
+  }
+
+  const endpoint = `${config.url}/api/v1/prediction/${config.chatflowId}`;
+
+  const body = {
+    question,
+    overrideConfig: activeFilter ? { chromaMetadataFilter: { source: activeFilter } } : {},
+    history: chatHistory.slice(-6).map(h => ({
+      role: h.role === 'user' ? 'userMessage' : 'apiMessage',
+      content: h.content,
+    })),
+    sessionId,
+  };
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+  if (config.apiKey) headers['Authorization'] = `Bearer ${config.apiKey}`;
+
+  // AbortController for 60s timeout
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 60000);
+
+  let res;
+  try {
+    res = await fetch(endpoint, {
+      method:  'POST',
+      mode:    'cors',
+      headers,
+      body:    JSON.stringify(body),
+      signal:  controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timer);
+    if (err.name === 'AbortError') {
+      throw new Error('Request timed out after 60s. Is Flowise running?');
+    }
+    // "Failed to fetch" = network/CORS/server not running
+    throw new Error(
+      'Cannot reach Flowise. Make sure:\n' +
+      '1. Flowise is running (npx flowise start)\n' +
+      '2. Open this file via http://localhost — not file://\n' +
+      '3. Your Flowise URL is correct in settings ⚙'
+    );
+  }
+  clearTimeout(timer);
+
+  if (!res.ok) {
+    let txt = '';
+    try { txt = await res.text(); } catch(_) {}
+    throw new Error(`Flowise returned ${res.status}: ${txt.slice(0, 160) || 'no details'}`);
+  }
+
+  let data;
+  try { data = await res.json(); } catch(_) {
+    throw new Error('Flowise returned non-JSON. Check your Chatflow ID.');
+  }
+  return data;
+}
+
+/* ── Test connection (called from config panel) ── */
+async function testConnection() {
+  const url        = document.getElementById('flowiseUrl').value.trim().replace(/\/$/, '');
+  const chatflowId = document.getElementById('chatflowId').value.trim();
+  const apiKey     = document.getElementById('apiKey').value.trim();
+
+  if (!chatflowId) { showToast('⚠ Enter a Chatflow ID first'); return; }
+
+  const btn = document.getElementById('testBtn');
+  btn.textContent = 'TESTING…';
+  btn.disabled = true;
+
+  const endpoint = `${url}/api/v1/prediction/${chatflowId}`;
+  const headers  = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+  if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
+  try {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 10000);
+    const res = await fetch(endpoint, {
+      method:  'POST',
+      mode:    'cors',
+      headers,
+      body:    JSON.stringify({ question: 'ping', sessionId: 'test' }),
+      signal:  controller.signal,
+    });
+    if (res.ok || res.status === 400) {
+      // 400 is fine — means Flowise is alive, just rejected empty input
+      showToast('✓ FLOWISE IS REACHABLE');
+      btn.textContent = '✓ REACHABLE';
+      btn.style.borderColor = '#3dba6f';
+      btn.style.color = '#3dba6f';
+    } else {
+      showToast(`⚠ Flowise responded with ${res.status}`);
+      btn.textContent = `✗ STATUS ${res.status}`;
+    }
+  } catch(err) {
+    const msg = err.name === 'AbortError'
+      ? '⚠ Timed out — is Flowise running?'
+      : '⚠ Failed to fetch — serve via http:// not file://';
+    showToast(msg);
+    btn.textContent = '✗ UNREACHABLE';
+    btn.style.borderColor = '#e05555';
+    btn.style.color = '#e05555';
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => {
+      btn.textContent = 'TEST CONNECTION';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    }, 4000);
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   SEND MESSAGE
+════════════════════════════════════════════════════ */
+async function sendMessage() {
+  if (isStreaming) return;
+
+  const ta   = document.getElementById('userInput');
+  const text = ta.value.trim();
+  if (!text) return;
+
+  ta.value = '';
+  autoResize(ta);
+
+  isStreaming = true;
+  document.getElementById('sendBtn').disabled = true;
+  updateStatus(true);
+
+  appendUserMsg(text);
+  chatHistory.push({ role: 'user', content: text });
+
+  const typingEl = appendTyping();
+
+  try {
+    // Small delay so typing animation is visible
+    await new Promise(r => setTimeout(r, 400));
+
+    replaceTypingWithStream(typingEl);
+
+    const streamBubble = document.getElementById('streamBubble');
+    const data = await callFlowise(text);
+
+    // Simulate token streaming from the completed response
+    const answer = data.text || data.answer || data.response || '';
+    const sources = data.sourceDocuments || [];
+
+    // Stream text character by character for effect
+    await streamText(streamBubble, answer);
+
+    // Finalize with sources
+    finalizeBotMsg(typingEl, answer, sources);
+    chatHistory.push({ role: 'assistant', content: answer });
+
+  } catch (err) {
+    finalizeBotMsg(typingEl, `⚠ ${err.message}`, []);
+    updateStatus(false);
+    console.error(err);
+  } finally {
+    isStreaming = false;
+    document.getElementById('sendBtn').disabled = false;
+    scrollBottom();
+  }
+}
+
+/* Simulate streaming by revealing text progressively */
+async function streamText(el, text) {
+  const cursor = document.createElement('span');
+  cursor.className = 'stream-cursor';
+  el.appendChild(cursor);
+
+  const chunkSize = Math.max(1, Math.floor(text.length / 60));
+
+  for (let i = 0; i < text.length; i += chunkSize) {
+    const chunk = text.slice(0, i + chunkSize);
+    el.textContent = chunk;
+    el.appendChild(cursor);
+    scrollBottom();
+    await new Promise(r => setTimeout(r, 18));
+  }
+
+  el.textContent = text;
+  scrollBottom();
+}
+
+/* ════════════════════════════════════════════════════
+   CLEAR CHAT
+════════════════════════════════════════════════════ */
+function clearChat() {
+  chatHistory = [];
+  sessionId   = generateId();
+  localStorage.setItem('nb_session', sessionId);
+
+  const msgs = document.getElementById('messages');
+  msgs.innerHTML = `
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">
+        <div class="empty-ring er1"></div>
+        <div class="empty-ring er2"></div>
+        <div class="empty-ring er3"></div>
+        <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M36 4 L62 16 L62 40 C62 56 36 68 36 68 C36 68 10 56 10 40 L10 16 Z" fill="#080b10" stroke="#c9a855" stroke-width="1.4"/>
+          <path d="M36 11 L56 21 L56 39 C56 52 36 62 36 62 C36 62 16 52 16 39 L16 21 Z" fill="none" stroke="#c9a855" stroke-width="0.6" opacity="0.35"/>
+          <line x1="22" y1="34" x2="50" y2="34" stroke="#c9a855" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="36" y1="22" x2="36" y2="54" stroke="#c9a855" stroke-width="1.2" stroke-linecap="round"/>
+          <circle cx="36" cy="23" r="2.5" fill="#c9a855"/>
+          <line x1="24" y1="34" x2="22" y2="42" stroke="#c9a855" stroke-width="0.9" stroke-dasharray="2 1.5"/>
+          <path d="M17 42 Q22 47 27 42" stroke="#c9a855" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+          <line x1="48" y1="34" x2="50" y2="42" stroke="#c9a855" stroke-width="0.9" stroke-dasharray="2 1.5"/>
+          <path d="M45 42 Q50 47 55 42" stroke="#c9a855" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+          <rect x="30" y="52" width="12" height="2" rx="1" fill="#c9a855" opacity="0.6"/>
+          <circle cx="22" cy="26" r="2" fill="#4a7fb5" opacity="0.9"/>
+          <circle cx="50" cy="26" r="2" fill="#4a7fb5" opacity="0.9"/>
+          <line x1="24" y1="26" x2="34" y2="26" stroke="#4a7fb5" stroke-width="0.8" opacity="0.6"/>
+          <line x1="38" y1="26" x2="48" y2="26" stroke="#4a7fb5" stroke-width="0.8" opacity="0.6"/>
+          <circle cx="36" cy="26" r="1.4" fill="#4a7fb5" opacity="0.8"/>
+        </svg>
+      </div>
+      <div>
+        <div class="empty-title">Ask NitiBot anything about<br>Indian legal compliance</div>
+        <div class="empty-sub" style="margin-top:10px">Powered by GST Act · Companies Act · IT Act · SEBI · RBI</div>
+      </div>
+      <div class="starters">
+        <div class="starter-card" onclick="fillQuestion(this.querySelector('.starter-text').textContent)">
+          <div class="starter-label">📋 GST</div>
+          <div class="starter-text">What is the GST registration threshold for businesses?</div>
+        </div>
+        <div class="starter-card" onclick="fillQuestion(this.querySelector('.starter-text').textContent)">
+          <div class="starter-label">🏢 Companies Act</div>
+          <div class="starter-text">What are director responsibilities under Companies Act 2013?</div>
+        </div>
+        <div class="starter-card" onclick="fillQuestion(this.querySelector('.starter-text').textContent)">
+          <div class="starter-label">💻 IT Act</div>
+          <div class="starter-text">What are data protection obligations for businesses under IT Act?</div>
+        </div>
+        <div class="starter-card" onclick="fillQuestion(this.querySelector('.starter-text').textContent)">
+          <div class="starter-label">📈 SEBI</div>
+          <div class="starter-text">What are insider trading regulations under SEBI?</div>
+        </div>
+      </div>
+    </div>`;
+  showToast('✓ CONVERSATION CLEARED');
+}
+
+/* ════════════════════════════════════════════════════
+   KEYBOARD
+════════════════════════════════════════════════════ */
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   TEXT UTILS
+════════════════════════════════════════════════════ */
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+function formatText(str) {
+  // Basic markdown-lite
+  return escapeHtml(str)
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,     '<em>$1</em>')
+    .replace(/`(.*?)`/g,       '<code style="font-family:Space Mono,monospace;font-size:12px;background:rgba(201,168,85,0.1);padding:1px 5px;border-radius:3px;color:#c9a855;">$1</code>')
+    .replace(/\n/g,            '<br>');
+}
+
+/* ════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════ */
+// Auto-open config if no chatflow ID
+if (!config.chatflowId) {
+  setTimeout(openConfig, 1200);
+}
+
+// Close config on overlay click
+document.getElementById('configOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeConfig();
+});
+
+// Focus textarea on load
+document.getElementById('userInput').focus();
+</script>
+</body>
+</html>
